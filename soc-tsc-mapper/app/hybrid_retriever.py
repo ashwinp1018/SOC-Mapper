@@ -24,9 +24,15 @@ FAMILY_KEYWORDS = {
     "CC4": ["monitoring", "deficiency", "evaluation", "ongoing", "separate evaluation", "audit committee"],
     "CC5": ["control activities", "policies", "procedures", "technology general controls"],
     "CC6": ["access", "logical", "authentication", "authorization", "credential", "encryption", "provisioning", "deprovisioning"],
-    "CC7": ["incident", "threat", "detection", "response", "anomaly", "malware", "breach", "vulnerability", "security event"],
+    "CC7": [
+        "incident", "threat", "detection", "anomaly", "malware", "breach", "vulnerability", "security event"
+    ],
     "CC8": ["change", "sdlc", "deployment", "release", "development", "production change"],
-    "CC9": ["vendor", "third party", "subservice", "contract", "msa", "service commitment", "business disruption"],
+    "CC9": [
+        "vendor", "third party", "subservice", "contract", "msa", "service commitment", 
+        "business disruption", "onboarding", "right to audit", "data handling", 
+        "service provider", "annual review", "vendor assessment", "due diligence"
+    ],
     "PI":  ["processing integrity", "complete", "accurate", "timely", "authorized processing", "transaction"],
     "A":   ["availability", "uptime", "capacity", "recovery", "backup", "resilience", "rto", "rpo"],
     "C":   ["confidentiality", "classification", "disposal", "nda", "sensitive", "confidential information"],

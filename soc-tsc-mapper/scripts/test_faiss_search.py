@@ -13,7 +13,7 @@ from pathlib import Path
 
 # --- TEST QUERIES ---
 queries = [
-    "The organization collects personal information only for purposes disclosed in its privacy notice. Individuals are informed of their rights regarding access, correction, and deletion of their personal data. Consent is obtained prior to collection and use of sensitive personal information.",
+    "The organization maintains a formal vendor management program in which third-party service providers are assessed prior to onboarding and monitored on an ongoing basis. Contracts and MSAs include security requirements, data handling obligations, and the right to audit. Subservice organizations are reviewed annually to ensure continued compliance with the organization's trust services commitments.",
 ]
 
 
@@ -26,6 +26,7 @@ def deduplicate_by_criterion(results):
         if criterion not in seen or r["score"] > seen[criterion]["score"]:
             r["criterion_clean"] = criterion
             seen[criterion] = r
+    # Only slice to top 10 after deduplication
     return sorted(seen.values(), key=lambda x: x["score"], reverse=True)[:10]
 
 def test_hybrid_retrieval():
@@ -38,8 +39,10 @@ def test_hybrid_retrieval():
     hybrid = HybridRetriever(chunks, index, alpha=ALPHA_PRESETS['balanced'])
     for query in queries:
         query_embedding = get_embedding(query)
-        results = hybrid.retrieve(query, query_embedding, top_n=30)  # get more for deduplication
-        deduped = deduplicate_by_criterion(results)
+        # Fetch more candidates before deduplication
+        results = hybrid.retrieve(query, query_embedding, top_n=50)
+        deduped = deduplicate_by_criterion(results)[:10]
+        # Ensure exactly 10 results are printed
         print(f"CONTROL - {query}\n")
         for i, r in enumerate(deduped, 1):
             c = r['chunk']
