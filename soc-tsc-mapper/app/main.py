@@ -40,15 +40,27 @@ async def match(request: dict):
         
         results = match_control(control, alpha=alpha, top_k=10)
         print(f"[MATCH] Got {len(results)} results from match_control()")
-        
+        print("[MATCH] First raw result keys:", results[0].keys() if results else "empty")
+
+        seen_criteria = {}
+        for r in results:
+            # match_control returns dicts with keys: id, section, text, score
+            criterion = r.get("id", "")
+            base = criterion.split("-")[0] if "-" in criterion else criterion
+            if base not in seen_criteria or r["score"] > seen_criteria[base]["score"]:
+                r["criterion_clean"] = base
+                seen_criteria[base] = r
+
+        deduped = sorted(seen_criteria.values(), key=lambda x: x["score"], reverse=True)[:10]
+
         formatted = [
             {
                 "rank": i + 1,
-                "criterion": r.get("id", "UNKNOWN").split("-")[0] if "-" in r.get("id", "") else r.get("id", "UNKNOWN"),
+                "criterion": r["criterion_clean"],
                 "section": r.get("section", "UNKNOWN").upper(),
                 "score": round(r["score"], 4)
             }
-            for i, r in enumerate(results)
+            for i, r in enumerate(deduped)
         ]
         print(f"[MATCH] Returning {len(formatted)} formatted results")
         return {"control": control, "results": formatted}

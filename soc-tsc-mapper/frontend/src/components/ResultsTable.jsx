@@ -7,53 +7,57 @@ export default function ResultsTable({ results, control }) {
 
   const getScoreColor = (score) => {
     if (score > 0.02) {
-      return "bg-green-900 text-green-300";
+      return "bg-green-100 text-green-800 border-green-200";
     } else if (score >= 0.015) {
-      return "bg-yellow-900 text-yellow-300";
+      return "bg-yellow-100 text-yellow-800 border-yellow-200";
     } else {
-      return "bg-gray-700 text-gray-300";
+      return "bg-gray-100 text-gray-700 border-gray-200";
     }
   };
 
   const getBorderColor = (rank) => {
     if (rank === 1) {
-      return "border-l-4 border-yellow-400";
+      return "border-l-[3px] border-l-yellow-400 bg-yellow-50/30";
     } else if (rank <= 3) {
-      return "border-l-4 border-gray-400";
+      return "border-l-[3px] border-l-gray-300";
     }
-    return "";
+    return "border-l-[3px] border-l-transparent";
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
       {control && (
-        <div className="bg-gray-800 border border-gray-700 rounded-lg p-4">
-          <p className="text-xs text-gray-400 font-medium uppercase tracking-wider mb-2">Query</p>
-          <p className="text-gray-300 line-clamp-3">{control}</p>
+        <div className="bg-gray-50/50 border border-gray-200 rounded-sm p-5 shadow-sm transition-all duration-300 hover:shadow-md">
+          <p className="text-xs text-gray-400 font-bold uppercase tracking-widest mb-3">Analyzed Query</p>
+          <p className="text-gray-700 leading-relaxed text-sm">{control}</p>
         </div>
       )}
 
-      <div className="overflow-x-auto border border-gray-700 rounded-lg">
+      <div className="overflow-hidden border border-gray-200 rounded-sm shadow-sm hover:shadow-md transition-all duration-300 bg-white">
         <table className="w-full text-sm">
           <thead>
-            <tr className="bg-gray-800 border-b border-gray-700">
-              <th className="px-4 py-3 text-left font-medium text-gray-300">Rank</th>
-              <th className="px-4 py-3 text-left font-medium text-gray-300">Criterion</th>
-              <th className="px-4 py-3 text-left font-medium text-gray-300">Section</th>
-              <th className="px-4 py-3 text-right font-medium text-gray-300">Score</th>
+            <tr className="bg-gray-50/80 border-b border-gray-100">
+              <th className="px-5 py-4 text-left font-semibold text-gray-600 text-xs uppercase tracking-wider">Rank</th>
+              <th className="px-5 py-4 text-left font-semibold text-gray-600 text-xs uppercase tracking-wider">Criterion</th>
+              <th className="px-5 py-4 text-left font-semibold text-gray-600 text-xs uppercase tracking-wider">Section</th>
+              <th className="px-5 py-4 text-right font-semibold text-gray-600 text-xs uppercase tracking-wider">Score</th>
             </tr>
           </thead>
-          <tbody>
+          <tbody className="divide-y divide-gray-50">
             {results.map((result, idx) => (
               <tr
                 key={idx}
-                className={`border-b border-gray-700 hover:bg-gray-800/50 transition-colors ${getBorderColor(result.rank)}`}
+                className={`hover:bg-gray-50 hover:-translate-y-0.5 transition-all duration-200 group relative ${getBorderColor(result.rank)}`}
               >
-                <td className="px-4 py-3 text-gray-300 font-medium">{result.rank}</td>
-                <td className="px-4 py-3 text-gray-300">{result.criterion}</td>
-                <td className="px-4 py-3 text-gray-400">{result.section}</td>
-                <td className="px-4 py-3 text-right">
-                  <span className={`inline-block px-3 py-1 rounded font-mono text-xs font-medium ${getScoreColor(result.score)}`}>
+                <td className="px-5 py-4 text-gray-900 font-semibold">
+                  <span className={`inline-flex items-center justify-center w-6 h-6 rounded-full text-xs ${result.rank === 1 ? 'bg-yellow-400 text-white' : 'bg-gray-100 text-gray-600'}`}>
+                    {result.rank}
+                  </span>
+                </td>
+                <td className="px-5 py-4 text-gray-900 font-medium">{result.criterion}</td>
+                <td className="px-5 py-4 text-gray-500">{result.section}</td>
+                <td className="px-5 py-4 text-right">
+                  <span className={`inline-block px-2.5 py-1 rounded-md border font-mono text-[11px] font-semibold tracking-wide ${getScoreColor(result.score)}`}>
                     {result.score.toFixed(4)}
                   </span>
                 </td>
