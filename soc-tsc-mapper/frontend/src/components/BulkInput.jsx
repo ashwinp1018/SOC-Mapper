@@ -1,41 +1,55 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 
-export default function ControlInput({ onSubmit, isLoading }) {
-  const [control, setControl] = useState("");
+export default function BulkInput({ onSubmit, isLoading }) {
+  const [text, setText] = useState("");
   const [alpha, setAlpha] = useState(0.6);
+
+  const controlCount = useMemo(() => {
+    if (!text.trim()) return 0;
+    const byBlankLine = text.split(/\n\s*\n/).map(s => s.trim()).filter(Boolean);
+    if (byBlankLine.length > 1) return byBlankLine.length;
+    
+    const byNumber = text.split(/\n(?=\d+[.:])/).map(s => s.replace(/^\d+[.:]\s*/, '').trim()).filter(Boolean);
+    if (byNumber.length > 1) return byNumber.length;
+    
+    return [text.trim()].filter(Boolean).length;
+  }, [text]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    console.log("[INPUT] Submitting control, alpha:", alpha);
-    onSubmit(control, alpha);
+    console.log("[BULK INPUT] Submitting controls, alpha:", alpha);
+    onSubmit(text, alpha);
   };
-
-  const charCount = control.length;
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col h-full space-y-6">
       <div className="flex-grow flex flex-col">
-        <label htmlFor="control" className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-2 pl-1">
-          Audit Control Description
+        <label htmlFor="bulk-control" className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-1 pl-1">
+          Audit Control Descriptions
         </label>
+        <p className="text-xs text-gray-400 mb-3 block pl-1">
+          Enter each control on a new line. Separate controls with a blank line.
+        </p>
         <textarea
-          id="control"
-          value={control}
-          onChange={(e) => setControl(e.target.value)}
-          placeholder="Paste your audit control description here..."
-          rows={6}
+          id="bulk-control"
+          value={text}
+          onChange={(e) => setText(e.target.value)}
+          placeholder={"Enter multiple controls, one per line or separated by blank lines.\n\nExample:\nControl 1: User access is reviewed quarterly...\n\nControl 2: Backup jobs are executed daily..."}
+          rows={12}
           className="w-full flex-grow bg-gray-50 hover:bg-white text-gray-800 p-4 border border-gray-200 rounded-2xl outline-none text-sm focus:bg-white focus:ring-2 focus:ring-yellow-400/30 focus:border-[#FFE600] shadow-inner transition-all resize-y placeholder-gray-400 leading-relaxed min-h-[140px]"
         />
-        <p className="mt-2 text-[10px] font-bold text-gray-400 tracking-wider text-right pr-2 uppercase">{charCount} characters</p>
+        <p className="mt-2 text-[10px] font-bold uppercase tracking-wider text-[#b3a200] text-right pr-2">
+          {controlCount} controls detected
+        </p>
       </div>
 
       <div>
-        <label htmlFor="alpha" className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-2 pl-1">
+        <label htmlFor="bulk-alpha" className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-2 pl-1">
           Retrieval Strategy
         </label>
         <div className="relative">
           <select
-            id="alpha"
+            id="bulk-alpha"
             value={alpha}
             onChange={(e) => setAlpha(parseFloat(e.target.value))}
             className="w-full bg-gray-50 hover:bg-white text-gray-800 p-4 border border-gray-200 rounded-2xl outline-none text-sm focus:bg-white focus:ring-2 focus:ring-yellow-400/30 focus:border-[#FFE600] shadow-sm transition-all appearance-none cursor-pointer font-medium"
@@ -50,19 +64,19 @@ export default function ControlInput({ onSubmit, isLoading }) {
 
       <button
         type="submit"
-        disabled={isLoading || !control.trim()}
+        disabled={isLoading || controlCount === 0}
         className={`w-full py-4 px-5 rounded-2xl font-bold shadow-sm hover:shadow transition-all duration-200 mt-2 flex justify-center items-center text-sm ${
-          isLoading || !control.trim()
+          isLoading || controlCount === 0
             ? "bg-gray-100 text-gray-400 cursor-not-allowed border border-gray-200"
             : "bg-[#FFE600] text-gray-900 border border-yellow-500/30 hover:bg-yellow-400 active:scale-[0.98]"
         }`}
       >
         {isLoading ? (
           <span className="flex items-center">
-            <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-            Analyzing...
+             <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+             Analyzing {controlCount} controls...
           </span>
-        ) : "Analyze Control"}
+        ) : "Analyze All Controls"}
       </button>
     </form>
   );

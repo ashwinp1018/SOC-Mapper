@@ -43,10 +43,20 @@ async def match(request: dict):
         print("[MATCH] First raw result keys:", results[0].keys() if results else "empty")
 
         seen_criteria = {}
+        criterion_bullets = {}
+
         for r in results:
             # match_control returns dicts with keys: id, section, text, score
             criterion = r.get("id", "")
             base = criterion.split("-")[0] if "-" in criterion else criterion
+            
+            if base not in criterion_bullets:
+                criterion_bullets[base] = []
+            
+            bullet_text = r.get("text", "")
+            if bullet_text and bullet_text not in criterion_bullets[base] and len(criterion_bullets[base]) < 3:
+                criterion_bullets[base].append(bullet_text)
+
             if base not in seen_criteria or r["score"] > seen_criteria[base]["score"]:
                 r["criterion_clean"] = base
                 seen_criteria[base] = r
@@ -58,7 +68,8 @@ async def match(request: dict):
                 "rank": i + 1,
                 "criterion": r["criterion_clean"],
                 "section": r.get("section", "UNKNOWN").upper(),
-                "score": round(r["score"], 4)
+                "score": round(r["score"], 4),
+                "bullets": criterion_bullets.get(r["criterion_clean"], [])
             }
             for i, r in enumerate(deduped)
         ]
@@ -69,6 +80,74 @@ async def match(request: dict):
         raise
     except Exception as e:
         print(f"[MATCH EXCEPTION] {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/match/bulk")
+async def match_bulk(request: dict):
+    print(f"[BULK] Received bulk request")
+    try:
+        controls = request.get("controls", [])
+        alpha = float(request.get("alpha", 0.6))
+        top_k = int(request.get("top_k", 3))
+
+        if not controls:
+            raise HTTPException(status_code=400, detail="Controls list cannot be empty")
+
+        results_out = []
+        
+        for i, control in enumerate(controls):
+            control = control.strip()
+            if not control:
+                continue
+                
+            print(f"[BULK] Processing control {i+1}/{len(controls)}: {control[:60]}...")
+            
+            matches = match_control(control, alpha=alpha, top_k=20) 
+            
+            seen_criteria = {}
+            criterion_bullets = {}
+
+            for r in matches:
+                criterion = r.get("id", "")
+                base = criterion.split("-")[0] if "-" in criterion else criterion
+                
+                if base not in criterion_bullets:
+                    criterion_bullets[base] = []
+                
+                bullet_text = r.get("text", "")
+                if bullet_text and bullet_text not in criterion_bullets[base] and len(criterion_bullets[base]) < 3:
+                    criterion_bullets[base].append(bullet_text)
+
+                if base not in seen_criteria or r["score"] > seen_criteria[base]["score"]:
+                    r["criterion_clean"] = base
+                    seen_criteria[base] = r
+
+            deduped = sorted(seen_criteria.values(), key=lambda x: x["score"], reverse=True)[:top_k]
+
+            formatted = [
+                {
+                    "rank": j + 1,
+                    "criterion": r["criterion_clean"],
+                    "section": r.get("section", "UNKNOWN").upper(),
+                    "score": round(r["score"], 4),
+                    "bullets": criterion_bullets.get(r["criterion_clean"], [])
+                }
+                for j, r in enumerate(deduped)
+            ]
+            
+            results_out.append({
+                "control_number": i + 1,
+                "control_text": control,
+                "matches": formatted
+            })
+            
+        print(f"[BULK] Returning {len(results_out)} bulk results")
+        return {"results": results_out}
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"[BULK EXCEPTION] {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
 # To run: uvicorn app.main:app --reload

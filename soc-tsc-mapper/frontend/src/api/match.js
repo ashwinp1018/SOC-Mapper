@@ -30,3 +30,29 @@ export async function callMatch(control, alpha) {
     throw error;
   }
 }
+
+export async function callMatchBulk(controls, alpha) {
+  console.log("[API BULK] Sending", controls.length, "controls");
+  
+  try {
+    const response = await fetch("http://localhost:8000/match/bulk", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ controls, alpha, top_k: 3 })
+    });
+    
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.detail || `HTTP ${response.status}: ${response.statusText}`);
+    }
+    
+    const data = await response.json();
+    console.log("[API BULK] Response:", data);
+    return data;
+  } catch (error) {
+    console.error("[API BULK] Error:", error.message);
+    throw error;
+  }
+}
