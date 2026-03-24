@@ -131,7 +131,7 @@ export default function App() {
           </div>
         ) : (
           <div className="grid grid-cols-1 gap-6">
-            <div className="bg-white rounded-3xl p-6 md:p-8 shadow-sm border border-gray-200 ring-1 ring-black/5 max-w-4xl mx-auto w-full">
+            <div className="bg-white rounded-3xl p-6 md:p-8 shadow-sm border border-gray-200 ring-1 ring-black/5 max-w-4xl mx-auto w-full mb-8">
               <h2 className="text-xl font-bold mb-6 flex items-center text-gray-900 border-b border-gray-100 pb-5">
                 <span className="w-8 h-8 rounded-xl bg-yellow-100 text-yellow-700 flex items-center justify-center mr-3 text-sm font-extrabold shadow-sm border border-yellow-200/50">1</span>
                 Bulk Control Input

@@ -10,10 +10,10 @@ export default function ResultsTable({ results, control }) {
     const rect = event.currentTarget.getBoundingClientRect();
     let x = rect.right + 8;
     let y = rect.top;
-    
+
     if (x + 340 > window.innerWidth) x = rect.left - 340;
     if (y + 400 > window.innerHeight) y = Math.max(10, window.innerHeight - 410);
-    
+
     setTooltipPos({ x, y });
     setTooltipData(result);
     setHoveredRank(result.rank);
@@ -24,7 +24,7 @@ export default function ResultsTable({ results, control }) {
   const parseTooltipText = (text) => {
     if (!text) return null;
     const parts = text.split(/(Section:|Criterion:|COSO Principle \d+:)/g);
-    
+
     return parts.map((part, index) => {
       if (part.match(/^(Section:|Criterion:|COSO Principle \d+:)$/)) {
         return <span key={index} style={{ color: '#FFE600', fontWeight: 'bold' }}>{part}</span>;
@@ -92,7 +92,7 @@ export default function ResultsTable({ results, control }) {
                 </td>
                 <td className="px-5 py-5 text-gray-900 font-medium align-middle">
                   <span className={`inline-flex items-center text-xs font-semibold px-3 py-1.5 rounded-full shadow-sm border transition-colors ${result.rank === 1 ? 'bg-yellow-100 border-yellow-200 text-yellow-800' : 'bg-white border-gray-200 text-gray-700'}`}>
-                     <span className="font-mono pt-[1px] tracking-wide">{result.criterion}</span>
+                    <span className="font-mono pt-[1px] tracking-wide">{result.criterion}</span>
                   </span>
                 </td>
                 <td className="px-5 py-5 text-gray-500 text-sm align-middle">{result.section}</td>
@@ -109,7 +109,7 @@ export default function ResultsTable({ results, control }) {
 
       {/* Fixed Tooltip Overlay */}
       {tooltipData && (
-        <div 
+        <div
           className={`fixed z-[100] w-max max-w-[320px] max-h-[400px] overflow-y-auto bg-gray-900 border border-gray-700/50 rounded-2xl shadow-2xl p-4 transition-all duration-200 pointer-events-none left-0 top-0
             ${hoveredRank !== null ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2'}
           `}
