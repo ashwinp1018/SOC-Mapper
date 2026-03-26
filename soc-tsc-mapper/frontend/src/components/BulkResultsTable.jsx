@@ -2,22 +2,6 @@ import React, { useState, useEffect } from 'react';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 
-const SECTION_MAPPING = {
-  "CC1": "1.0 Control Environment",
-  "CC2": "2.0 Communication and Information",
-  "CC3": "3.0 Risk Assessment",
-  "CC4": "4.0 Monitoring Activities",
-  "CC5": "5.0 Control Activities",
-  "CC6": "6.0 Logical and Physical Access",
-  "CC7": "7.0 System Operations",
-  "CC8": "8.0 Change Management",
-  "CC9": "9.0 Risk Mitigation",
-  "A": "10.0 Availability",
-  "C": "11.0 Confidentiality",
-  "PI": "12.0 Processing Integrity",
-  "P": "13.0 Privacy"
-};
-
 const TESTING_RESULTS_OPTIONS = [
   "-- Select --",
   "No deviations noted",
@@ -114,9 +98,9 @@ export default function BulkResultsTable({ results }) {
     const parts = text.split(/(Section:|Criterion:|COSO Principle \d+:)/g);
     return parts.map((part, index) => {
       if (part.match(/^(Section:|Criterion:|COSO Principle \d+:)$/)) {
-        return <span key={index} style={{ color: '#FFE600', fontWeight: 'bold' }}>{part}</span>;
+        return <span key={index} className="text-[#FFE600] font-[700] block mt-2 mb-0.5 uppercase tracking-wide">{part}</span>;
       }
-      return <span key={index}>{part}</span>;
+      return <span key={index} className="text-[#374151]">{part.trim()}</span>;
     });
   };
 
@@ -308,19 +292,16 @@ export default function BulkResultsTable({ results }) {
   if (!editableResults || editableResults.length === 0) return null;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-[24px]">
 
       {/* Header Block Minimal Refinement */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-4">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900 mb-1 flex items-center">
-            <span className="bg-yellow-100 text-yellow-600 rounded-lg p-1.5 mr-3">
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
-            </span>
+          <h2 className="text-[16px] font-[700] text-[#111827] mb-1">
             Review & Edit Mapping Results
           </h2>
-          <p className="text-gray-500 text-sm max-w-2xl ml-11">
-            You can modify criteria, add testing notes, and select results before exporting to PDF.
+          <p className="text-[#6B7280] text-[13px] max-w-2xl">
+            Modify criteria and add audit notes before exporting
           </p>
         </div>
 
@@ -328,34 +309,33 @@ export default function BulkResultsTable({ results }) {
           <div className="relative">
             <button
               onClick={() => setShowColumnToggle(!showColumnToggle)}
-              className="flex items-center px-4 py-2 bg-gray-900 text-white font-bold rounded-xl shadow-sm hover:bg-gray-800 transition-all duration-200 text-sm border-2 border-[#FFE600]"
+              className="flex items-center px-4 h-[40px] bg-[#FFFFFF] text-[#374151] font-[600] transition-colors duration-150 text-[13px] border border-[#E5E7EB] hover:bg-[#F9FAFB] hover:border-[#D1D5DB]"
             >
-              <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path></svg>
-              Columns
+              <svg className="w-[16px] h-[16px] mr-2 text-[#9CA3AF]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path></svg>
+              COLUMNS
             </button>
             
             {showColumnToggle && (
               <>
                 <div className="fixed inset-0 z-40" onClick={() => setShowColumnToggle(false)}></div>
-                <div className="absolute right-0 mt-2 w-56 bg-white border border-gray-200 rounded-xl shadow-xl z-50 p-2 text-sm font-medium">
-                  <div className="p-2 text-xs text-gray-400 font-bold uppercase tracking-wider border-b border-gray-100 mb-2">Configure Columns</div>
-                  <label className="flex items-center px-3 py-2 hover:bg-gray-50 rounded-lg cursor-not-allowed opacity-60">
-                    <input type="checkbox" checked readOnly className="mr-3 w-4 h-4 accent-yellow-500 rounded border-gray-300" /> Control #
+                <div className="absolute right-0 mt-2 w-56 bg-[#FFFFFF] border border-[#E5E7EB] z-50 p-2 text-[13px] font-[500] text-[#374151]">
+                  <label className="flex items-center px-3 py-2 hover:bg-[#F9FAFB] cursor-not-allowed opacity-60">
+                    <input type="checkbox" checked readOnly className="mr-3 w-4 h-4 accent-[#FFE600] border-[#E5E7EB]" /> Control #
                   </label>
-                  <label className="flex items-center px-3 py-2 hover:bg-gray-50 rounded-lg cursor-not-allowed opacity-60">
-                    <input type="checkbox" checked readOnly className="mr-3 w-4 h-4 accent-yellow-500 rounded border-gray-300" /> Control Description
+                  <label className="flex items-center px-3 py-2 hover:bg-[#F9FAFB] cursor-not-allowed opacity-60">
+                    <input type="checkbox" checked readOnly className="mr-3 w-4 h-4 accent-[#FFE600] border-[#E5E7EB]" /> Control Description
                   </label>
-                  <label className="flex items-center px-3 py-2 hover:bg-gray-50 rounded-lg cursor-pointer transition-colors">
-                    <input type="checkbox" checked={visibleColumns.criteria} onChange={() => setVisibleColumns({...visibleColumns, criteria: !visibleColumns.criteria})} className="mr-3 w-4 h-4 accent-yellow-500 rounded border-gray-300" /> Criteria Mapped
+                  <label className="flex items-center px-3 py-2 hover:bg-[#F9FAFB] cursor-pointer transition-colors">
+                    <input type="checkbox" checked={visibleColumns.criteria} onChange={() => setVisibleColumns({...visibleColumns, criteria: !visibleColumns.criteria})} className="mr-3 w-4 h-4 accent-[#FFE600] border-[#E5E7EB]" /> Criteria Mapped
                   </label>
-                  <label className="flex items-center px-3 py-2 hover:bg-gray-50 rounded-lg cursor-pointer transition-colors">
-                    <input type="checkbox" checked={visibleColumns.testing} onChange={() => setVisibleColumns({...visibleColumns, testing: !visibleColumns.testing})} className="mr-3 w-4 h-4 accent-yellow-500 rounded border-gray-300" /> Testing Performed by EY
+                  <label className="flex items-center px-3 py-2 hover:bg-[#F9FAFB] cursor-pointer transition-colors">
+                    <input type="checkbox" checked={visibleColumns.testing} onChange={() => setVisibleColumns({...visibleColumns, testing: !visibleColumns.testing})} className="mr-3 w-4 h-4 accent-[#FFE600] border-[#E5E7EB]" /> Testing Performed
                   </label>
-                  <label className="flex items-center px-3 py-2 hover:bg-gray-50 rounded-lg cursor-pointer transition-colors">
-                    <input type="checkbox" checked={visibleColumns.results} onChange={() => setVisibleColumns({...visibleColumns, results: !visibleColumns.results})} className="mr-3 w-4 h-4 accent-yellow-500 rounded border-gray-300" /> Results of Testing
+                  <label className="flex items-center px-3 py-2 hover:bg-[#F9FAFB] cursor-pointer transition-colors">
+                    <input type="checkbox" checked={visibleColumns.results} onChange={() => setVisibleColumns({...visibleColumns, results: !visibleColumns.results})} className="mr-3 w-4 h-4 accent-[#FFE600] border-[#E5E7EB]" /> Results
                   </label>
-                  <label className="flex items-center px-3 py-2 hover:bg-gray-50 rounded-lg cursor-pointer transition-colors">
-                    <input type="checkbox" checked={visibleColumns.comments} onChange={() => setVisibleColumns({...visibleColumns, comments: !visibleColumns.comments})} className="mr-3 w-4 h-4 accent-yellow-500 rounded border-gray-300" /> Comments
+                  <label className="flex items-center px-3 py-2 hover:bg-[#F9FAFB] cursor-pointer transition-colors">
+                    <input type="checkbox" checked={visibleColumns.comments} onChange={() => setVisibleColumns({...visibleColumns, comments: !visibleColumns.comments})} className="mr-3 w-4 h-4 accent-[#FFE600] border-[#E5E7EB]" /> Comments
                   </label>
                 </div>
               </>
@@ -365,42 +345,41 @@ export default function BulkResultsTable({ results }) {
           <button
             onClick={handleExportPDF}
             disabled={editableResults.length === 0}
-            className="flex items-center px-5 py-2 min-h-full bg-[#FFE600] text-gray-900 hover:bg-yellow-400 font-bold rounded-xl shadow-sm hover:shadow transition-all duration-200 text-sm disabled:opacity-50 disabled:cursor-not-allowed border border-[#FFE600]/80"
+            className="flex items-center px-5 h-[40px] bg-[#FFE600] text-[#111827] hover:bg-[#FFD700] hover:-translate-y-[1px] active:translate-y-[0px] font-[800] tracking-[0.05em] uppercase transition-all duration-150 text-[13px] disabled:opacity-50 disabled:cursor-not-allowed border-l-[4px] border-l-[#D4A017]"
           >
-            <svg className="w-4 h-4 mr-2 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
-            Export PDF Report
+            EXPORT PDF
           </button>
         </div>
       </div>
 
-      <div className="bg-white border border-gray-200 rounded-2xl shadow-sm overflow-x-auto ring-1 ring-black/5">
+      <div className="bg-[#FFFFFF] border  border-[#E5E7EB] overflow-x-auto">
         <table className="w-full text-left table-fixed min-w-[1200px] border-collapse">
           <thead>
-            <tr className="bg-gray-50/80 border-b border-gray-100">
-              <th className="px-5 py-4 font-semibold text-gray-400 text-[11px] uppercase tracking-wider w-[5%] text-center">#</th>
-              <th className="px-5 py-4 font-semibold text-gray-400 text-[11px] uppercase tracking-wider w-[24%]">Control Description</th>
-              {visibleColumns.criteria && <th className="px-5 py-4 font-semibold text-gray-400 text-[11px] uppercase tracking-wider w-[20%]">Criteria Mapped</th>}
-              {visibleColumns.testing && <th className="px-5 py-4 font-semibold text-gray-400 text-[11px] uppercase tracking-wider w-[22%]">Testing Performed by EY</th>}
-              {visibleColumns.results && <th className="px-5 py-4 font-semibold text-gray-400 text-[11px] uppercase tracking-wider w-[14%]">Results</th>}
-              {visibleColumns.comments && <th className="px-5 py-4 font-semibold text-gray-400 text-[11px] uppercase tracking-wider w-[15%]">Comments</th>}
+            <tr className="border-b-[2px] border-[#FFE600] bg-[#FAFAFA]">
+              <th className="px-5 py-4 font-[600] text-[#9CA3AF] text-[11px] uppercase tracking-[0.08em] w-[4%] text-center border-r border-[#F0F0F0]">#</th>
+              <th className="px-5 py-4 font-[600] text-[#9CA3AF] text-[11px] uppercase tracking-[0.08em] w-[24%] border-r border-[#F0F0F0]">Control Description</th>
+              {visibleColumns.criteria && <th className="px-5 py-4 font-[600] text-[#9CA3AF] text-[11px] uppercase tracking-[0.08em] w-[20%] border-r border-[#F0F0F0]">Criteria</th>}
+              {visibleColumns.testing && <th className="px-5 py-4 font-[600] text-[#9CA3AF] text-[11px] uppercase tracking-[0.08em] w-[22%] border-r border-[#F0F0F0]">Testing Performed</th>}
+              {visibleColumns.results && <th className="px-5 py-4 font-[600] text-[#9CA3AF] text-[11px] uppercase tracking-[0.08em] w-[14%] border-r border-[#F0F0F0]">Results</th>}
+              {visibleColumns.comments && <th className="px-5 py-4 font-[600] text-[#9CA3AF] text-[11px] uppercase tracking-[0.08em] w-[16%]">Comments</th>}
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-100">
+          <tbody className="divide-y divide-[#F3F4F6]">
             {editableResults.map((r, idx) => (
-              <tr key={idx} className="hover:bg-gray-50/50 transition-colors duration-200">
+              <tr key={idx} className="hover:bg-[#F9FAFB] transition-colors duration-150 group">
 
                 {/* ID */}
-                <td className="px-5 py-5 align-top border-l-[3px] border-l-transparent hover:border-l-[#FFE600] transition-colors">
-                  <div className="flex flex-col items-center pt-1.5">
+                <td className="px-3 py-5 align-top border-r border-[#F3F4F6]">
+                  <div className="flex flex-col items-center pt-2">
                     {r.isNew ? (
                       <input
                         type="text"
                         value={r.control_number}
                         onChange={(e) => handleUpdateField(idx, 'control_number', e.target.value)}
-                        className="w-10 bg-gray-50 text-gray-900 border border-gray-200 focus:border-[#FFE600] focus:ring-2 focus:ring-yellow-400/20 outline-none px-1 py-1.5 text-xs text-center rounded-lg font-medium shadow-sm transition-all"
+                        className="w-8 bg-[#FFFFFF] text-[#111827] border border-[#E5E7EB] focus:border-[#FFE600] outline-none text-[13px] text-center font-[700] transition-colors"
                       />
                     ) : (
-                      <span className="font-bold text-gray-500 bg-gray-100 w-8 h-8 flex items-center justify-center rounded-full text-xs shadow-inner">
+                      <span className="font-[700] text-[#111827] text-[13px]">
                         {r.control_number}
                       </span>
                     )}
@@ -408,18 +387,17 @@ export default function BulkResultsTable({ results }) {
                 </td>
 
                 {/* Description */}
-                <td className="px-5 py-5 align-top group">
-                  <div className="flex flex-col gap-1.5 h-full relative">
-                    <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest pl-1">Client Defined</span>
+                <td className="px-5 py-4 align-top border-r border-[#F3F4F6]">
+                  <div className="h-[100px] relative">
                     {r.isNew ? (
                       <textarea
-                        className="w-full bg-gray-50 hover:bg-white text-gray-800 p-3.5 border border-gray-200 rounded-xl outline-none text-sm focus:bg-white focus:ring-2 focus:ring-yellow-400/30 focus:border-[#FFE600] shadow-sm transition-all min-h-[120px] leading-relaxed resize-y placeholder-gray-400"
+                        className="w-full h-full bg-[#FFFFFF] text-[#374151] p-2 border border-transparent border-b-[2px] border-b-[#E5E7EB] outline-none text-[13px] focus:border-b-[2px] focus:border-b-[#FFE600] focus:bg-white transition-all resize-none scrollbar-thin scrollbar-thumb-gray-200 scrollbar-track-transparent pr-1"
                         value={r.control_text}
                         onChange={(e) => handleUpdateField(idx, "control_text", e.target.value)}
                         placeholder="Type target control..."
                       />
                     ) : (
-                      <div className="text-gray-700 text-sm leading-relaxed p-4 bg-gray-50/80 rounded-xl border border-gray-100 h-full overflow-y-auto max-h-[160px] shadow-inner group-hover:bg-white transition-colors">
+                      <div className="text-[#374151] text-[13px] leading-relaxed p-1 h-full overflow-y-auto scrollbar-thin scrollbar-thumb-gray-200 scrollbar-track-transparent pr-1">
                         {r.control_text}
                       </div>
                     )}
@@ -427,49 +405,46 @@ export default function BulkResultsTable({ results }) {
                 </td>
 
                 {visibleColumns.criteria && (
-                <td className="px-5 py-5 align-top group">
-                  <div className="flex flex-col gap-1.5 h-full">
-                    <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest pl-1">Mapped Tags</span>
-                    <div className="flex flex-wrap gap-2 bg-gray-50 group-hover:bg-white p-3.5 rounded-xl border border-gray-200 min-h-[120px] items-start content-start shadow-inner transition-colors">
+                <td className="px-5 py-4 align-top border-r border-[#F3F4F6]">
+                  <div className="flex flex-col gap-2 h-full">
+                    <div className="flex flex-wrap gap-2 items-start content-start transition-colors">
                       {r.matches && r.matches.map((m, mIdx) => (
                         <span
                           key={mIdx}
-                          className="inline-flex items-center text-xs font-semibold text-yellow-800 bg-yellow-100 border border-yellow-200 rounded-full pl-3 pr-1 py-1 shadow-sm hover:shadow hover:bg-yellow-50 transition-all cursor-help relative"
+                          className="inline-flex items-center text-[12px] font-[700] text-[#92400E] bg-[#FFFBCC] border-[2px] border-[#FFE600] pl-2 pr-1 py-0.5 transition-colors cursor-help group/tag"
                           onMouseEnter={(e) => handleMouseEnter(e, m)}
                           onMouseLeave={handleMouseLeave}
                         >
                           <span className="tracking-wide font-mono pt-[1px]">{m.criterion}</span>
                           <button
                             onClick={() => handleRemoveCriterion(idx, mIdx)}
-                            className="ml-2 p-1 text-yellow-600/60 hover:text-red-600 hover:bg-red-50 rounded-full transition-colors flex items-center justify-center opacity-80 hover:opacity-100"
+                            className="ml-1 p-0.5 text-[#92400E] hover:text-[#EF4444] transition-colors flex items-center justify-center opacity-70 hover:opacity-100"
                             title="Remove Tag"
                           >
-                            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M6 18L18 6M6 6l12 12"></path></svg>
+                            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="3"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12"></path></svg>
                           </button>
                         </span>
                       ))}
 
                       {addingCriterionId === idx ? (
-                        <div className="flex w-full mt-1 items-center bg-white border border-[#FFE600] rounded-full p-1 pl-3 shadow-sm ring-2 ring-yellow-400/20">
+                        <div className="flex items-center bg-[#FFFFFF] border-[2px] border-[#FFE600] pl-2 pr-1 py-0.5">
                           <input
                             autoFocus
                             type="text"
                             value={newCriterionValue}
                             onChange={(e) => setNewCriterionValue(e.target.value)}
                             onKeyDown={(e) => e.key === 'Enter' && handleAddCriterionSubmit(idx)}
-                            placeholder="e.g. CC1.1"
-                            className="w-full min-w-[60px] bg-transparent text-gray-800 outline-none text-xs font-medium placeholder-gray-400 font-mono"
+                            placeholder="CC1.1"
+                            className="w-[48px] bg-transparent text-[#111827] outline-none text-[12px] font-[700] placeholder-[#D1D5DB] font-mono"
                           />
-                          <button onClick={() => handleAddCriterionSubmit(idx)} className="ml-2 text-[10px] uppercase tracking-wider bg-[#FFE600] text-gray-900 font-bold px-3 py-1.5 rounded-full hover:bg-yellow-400 transition-colors shrink-0">Add</button>
-                          <button onClick={() => { setAddingCriterionId(null); setNewCriterionValue("") }} className="ml-1 text-gray-400 hover:text-gray-600 p-1.5 rounded-full bg-gray-50 hover:bg-gray-100 transition-colors shrink-0"><svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg></button>
+                          <button onClick={() => { setAddingCriterionId(null); setNewCriterionValue("") }} className="text-[#9CA3AF] hover:text-[#EF4444] p-0.5 transition-colors"><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12"></path></svg></button>
                         </div>
                       ) : (
                         <button
                           onClick={() => setAddingCriterionId(idx)}
-                          className="inline-flex items-center justify-center text-[10px] uppercase font-bold text-gray-400 bg-white hover:bg-gray-50 hover:text-gray-600 hover:border-gray-300 px-3 py-1.5 rounded-full border border-dashed border-gray-300 transition-all shadow-sm tracking-wider mt-0.5"
+                          className="inline-flex items-center justify-center text-[11px] font-[700] uppercase tracking-wider text-[#6B7280] bg-transparent hover:bg-[#F9FAFB] hover:text-[#111827] px-2 py-1 border-[2px] border-dashed border-[#D1D5DB] hover:border-[#111827] transition-colors"
                         >
-                          <svg className="w-3 h-3 mr-1 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 4v16m8-8H4"></path></svg>
-                          ADD
+                          + ADD
                         </button>
                       )}
                     </div>
@@ -478,28 +453,32 @@ export default function BulkResultsTable({ results }) {
                 )}
 
                 {visibleColumns.testing && (
-                <td className="px-5 py-5 align-top">
-                  <div className="flex flex-col gap-1.5 h-full">
-                    <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest pl-1">Auditor Input</span>
-                    <textarea
-                      value={r.testing_performed}
-                      onChange={(e) => handleUpdateField(idx, "testing_performed", e.target.value)}
-                      className="w-full bg-gray-50 hover:bg-white text-gray-800 p-3.5 border border-gray-200 rounded-xl outline-none text-sm focus:bg-white focus:ring-2 focus:ring-yellow-400/30 focus:border-[#FFE600] shadow-sm transition-all min-h-[120px] leading-relaxed resize-y placeholder-gray-400"
-                      placeholder="Enter testing specifics..."
-                    />
-                  </div>
+                <td className="px-5 py-4 align-top border-r border-[#F3F4F6]">
+                  <textarea
+                    value={r.testing_performed}
+                    onChange={(e) => handleUpdateField(idx, "testing_performed", e.target.value)}
+                    className="w-full bg-transparent text-[#374151] font-[500] text-[13px] outline-none border border-transparent border-b-[2px] border-b-[#E5E7EB] focus:border-[2px] focus:border-[#FFE600] focus:bg-[#FFFFFF] transition-all duration-150 resize-y min-h-[44px] placeholder-[#9CA3AF] p-2"
+                    placeholder="Enter testing specifics..."
+                    rows={2}
+                  />
                 </td>
                 )}
 
                 {visibleColumns.results && (
-                <td className="px-5 py-5 align-top">
-                  <div className="flex flex-col gap-1.5 h-full">
-                    <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest pl-1">Verdict</span>
+                <td className="px-5 py-4 align-top border-r border-[#F3F4F6]">
+                  <div className="relative">
+                    <div className={`absolute left-0 top-[20%] bottom-[20%] w-[3px] pointer-events-none z-10 transition-colors ${
+                      r.testing_results === "No deviations noted" ? "bg-[#10B981]" : 
+                      r.testing_results === "Deviations noted" ? "bg-[#EF4444]" : 
+                      "bg-transparent"
+                    }`}></div>
                     <select
                       value={r.testing_results}
                       onChange={(e) => handleUpdateField(idx, "testing_results", e.target.value)}
-                      className="w-full bg-gray-50 hover:bg-white text-gray-800 p-3 border border-gray-200 rounded-xl outline-none text-sm focus:bg-white focus:ring-2 focus:ring-yellow-400/30 focus:border-[#FFE600] shadow-sm transition-all appearance-none cursor-pointer font-medium"
-                      style={{ backgroundImage: `url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%239CA3AF%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E")`, backgroundRepeat: 'no-repeat', backgroundPosition: 'right 0.85rem top 50%', backgroundSize: '0.65rem auto' }}
+                      className={`w-full bg-transparent text-[#374151] font-[600] text-[13px] outline-none border border-transparent border-b-[2px] border-b-[#E5E7EB] focus:border-[2px] focus:border-[#FFE600] focus:bg-[#FFFFFF] transition-all duration-150 p-2 cursor-pointer appearance-none ${
+                        r.testing_results !== "-- Select --" ? "pl-3" : ""
+                      }`}
+                      style={{ backgroundImage: `url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23111827%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E")`, backgroundRepeat: 'no-repeat', backgroundPosition: 'right 0.25rem top 50%', backgroundSize: '0.65rem auto' }}
                     >
                       {TESTING_RESULTS_OPTIONS.map(opt => (
                         <option key={opt} value={opt}>{opt}</option>
@@ -510,16 +489,14 @@ export default function BulkResultsTable({ results }) {
                 )}
 
                 {visibleColumns.comments && (
-                <td className="px-5 py-5 align-top">
-                  <div className="flex flex-col gap-1.5 h-full">
-                    <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest pl-1">Notes</span>
-                    <textarea
-                      value={r.comments}
-                      onChange={(e) => handleUpdateField(idx, "comments", e.target.value)}
-                      className="w-full bg-gray-50 hover:bg-white text-gray-800 p-3.5 border border-gray-200 rounded-xl outline-none text-sm focus:bg-white focus:ring-2 focus:ring-yellow-400/30 focus:border-[#FFE600] shadow-sm transition-all min-h-[120px] leading-relaxed resize-y placeholder-gray-400"
-                      placeholder="Deviations or tags..."
-                    />
-                  </div>
+                <td className="px-5 py-4 align-top">
+                  <textarea
+                    value={r.comments}
+                    onChange={(e) => handleUpdateField(idx, "comments", e.target.value)}
+                    className="w-full bg-transparent text-[#374151] font-[500] text-[13px] outline-none border border-transparent border-b-[2px] border-b-[#E5E7EB] focus:border-[2px] focus:border-[#FFE600] focus:bg-[#FFFFFF] transition-all duration-150 resize-y min-h-[44px] placeholder-[#9CA3AF] p-2"
+                    placeholder="Deviations or tags..."
+                    rows={2}
+                  />
                 </td>
                 )}
 
@@ -527,38 +504,46 @@ export default function BulkResultsTable({ results }) {
             ))}
           </tbody>
         </table>
+      </div>
 
-        <div className="p-4 bg-gray-50/50 border-t border-gray-100 flex justify-center">
-          <button
-            onClick={handleAddRow}
-            className="flex items-center text-gray-500 hover:text-gray-900 font-semibold text-sm bg-white hover:bg-gray-50 px-5 py-2.5 border border-gray-200 rounded-xl transition-all shadow-sm group"
-          >
-            <span className="bg-gray-100 text-gray-400 group-hover:bg-[#FFE600] group-hover:text-gray-900 rounded-full p-1 mr-2 transition-colors">
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 4v16m8-8H4"></path></svg>
-            </span>
-            Add Control Row
-          </button>
-        </div>
+      <div>
+        <button
+          onClick={handleAddRow}
+          className="w-full flex items-center justify-center text-[#6B7280] hover:text-[#111827] font-[700] text-[13px] uppercase tracking-wide bg-transparent hover:bg-[#FFFBCC] py-[12px] border-[2px] border-dashed border-[#D1D5DB] hover:border-[#FFE600] transition-colors"
+        >
+          + ADD CONTROL ROW
+        </button>
       </div>
 
       {hoveredResult && (
         <div
-          className="fixed z-[100] w-max max-w-[320px] max-h-[400px] overflow-y-auto bg-gray-900 border border-gray-700/50 rounded-2xl shadow-2xl p-4 transition-all duration-200 pointer-events-none opacity-100 left-0 top-0"
-          style={{ left: `${tooltipPos.x}px`, top: `${tooltipPos.y}px` }}
+          className={`fixed z-[100] w-max max-w-[340px] max-h-[400px] overflow-y-auto bg-[#FFFFFF] border border-[#E5E7EB] border-t-[4px] border-t-black p-5 pointer-events-none`}
+          style={{ 
+            left: `${tooltipPos.x}px`, 
+            top: `${tooltipPos.y}px`,
+            animation: 'slideIn 0.15s ease-out forwards'
+          }}
         >
-          <div className="font-bold text-yellow-400 text-xs mb-3 pb-2 border-b border-gray-700 uppercase tracking-wider">
-            {hoveredResult.criterion}
+          <div className="mb-4 pb-3 border-b border-[#F0F0F0]">
+            <span className="font-[700] text-[#111827] text-[14px] font-mono tracking-wide">{hoveredResult.criterion}</span>
+            <span className="text-[#9CA3AF] text-[11px] uppercase font-[600] ml-3">{hoveredResult.section}</span>
           </div>
-          <div className="text-gray-300 text-xs text-left space-y-3 whitespace-normal leading-relaxed">
+          
+          <div className="text-[13px] text-left space-y-3 leading-relaxed">
             {hoveredResult.bullets && hoveredResult.bullets.length > 0 ? (
-              hoveredResult.bullets.map((bullet, bIdx) => (
+              hoveredResult.bullets.slice(0, 3).map((bullet, bIdx) => (
                 <div key={bIdx} className="flex items-start">
-                  <span className="mr-2 text-yellow-500/50 flex-shrink-0 mt-0.5">•</span>
-                  <span>{parseTooltipText(bullet)}</span>
+                  <span className="mr-2 text-[#FFE600] flex-shrink-0 mt-0.5 font-bold">•</span>
+                  <div className="flex-1">{parseTooltipText(bullet)}</div>
                 </div>
               ))
             ) : (
-              <p className="italic text-gray-500">No description available</p>
+              <p className="italic text-[#9CA3AF]">No description available</p>
+            )}
+            {hoveredResult.bullets && hoveredResult.bullets.length > 3 && (
+              <div className="text-center pt-2 text-[11px] text-[#9CA3AF] italic uppercase tracking-widest font-[700]">
+                + {hoveredResult.bullets.length - 3} MORE BULLETS
+              </div>
             )}
           </div>
         </div>

@@ -1,25 +1,22 @@
 import { useState } from 'react';
 
-export default function ResultsTable({ results, control }) {
-  console.log("[RESULTS] Rendering", results.length, "results");
-  const [hoveredRank, setHoveredRank] = useState(null);
+export default function ResultsTable({ results }) {
+  const [hoveredResult, setHoveredResult] = useState(null);
   const [tooltipPos, setTooltipPos] = useState({ x: 0, y: 0 });
-  const [tooltipData, setTooltipData] = useState(null);
 
   const handleMouseEnter = (event, result) => {
     const rect = event.currentTarget.getBoundingClientRect();
-    let x = rect.right + 8;
+    let x = rect.right + 16;
     let y = rect.top;
 
-    if (x + 340 > window.innerWidth) x = rect.left - 340;
+    if (x + 360 > window.innerWidth) x = rect.left - 360;
     if (y + 400 > window.innerHeight) y = Math.max(10, window.innerHeight - 410);
 
     setTooltipPos({ x, y });
-    setTooltipData(result);
-    setHoveredRank(result.rank);
+    setHoveredResult(result);
   };
 
-  const handleMouseLeave = () => setHoveredRank(null);
+  const handleMouseLeave = () => setHoveredResult(null);
 
   const parseTooltipText = (text) => {
     if (!text) return null;
@@ -27,77 +24,62 @@ export default function ResultsTable({ results, control }) {
 
     return parts.map((part, index) => {
       if (part.match(/^(Section:|Criterion:|COSO Principle \d+:)$/)) {
-        return <span key={index} style={{ color: '#FFE600', fontWeight: 'bold' }}>{part}</span>;
+        return <span key={index} className="text-[#FFE600] font-[700] block mt-2 mb-0.5 uppercase tracking-wide">{part}</span>;
       }
-      return <span key={index}>{part}</span>;
+      return <span key={index} className="text-[#374151]">{part.trim()}</span>;
     });
   };
 
-  if (!results || results.length === 0) {
-    return <div className="text-gray-400 text-center py-8 text-sm">No results found</div>;
-  }
-
-  const getScoreColor = (score) => {
-    if (score > 0.02) {
-      return "bg-green-50 text-green-700 border-green-200";
-    } else if (score >= 0.015) {
-      return "bg-yellow-50 text-yellow-700 border-yellow-200";
-    } else {
-      return "bg-gray-50 text-gray-600 border-gray-200";
-    }
+  const getScoreStyle = (score) => {
+    if (score > 0.02) return "bg-[#FFE600] text-[#111827] font-[700]";
+    if (score >= 0.015) return "bg-[#FEF3C7] text-[#92400E]";
+    return "bg-[#F3F4F6] text-[#6B7280]";
   };
 
-  const getBorderColor = (rank) => {
-    if (rank === 1) {
-      return "border-l-[3px] border-l-[#FFE600] bg-yellow-50/30";
-    } else if (rank <= 3) {
-      return "border-l-[3px] border-l-gray-300/50";
-    }
-    return "border-l-[3px] border-l-transparent";
+  const getRowStyle = (rank) => {
+    if (rank === 1) return "border-l-[4px] border-l-[#FFE600] bg-[#FFFBCC] hover:bg-[#F9FAFB] hover:border-l-black";
+    if (rank <= 3) return "border-l-[2px] border-l-[#D1D5DB] hover:bg-[#F9FAFB] hover:border-l-black";
+    return "border-l-[2px] border-l-transparent hover:bg-[#F9FAFB] hover:border-l-black";
   };
+
+  if (!results || results.length === 0) return null;
 
   return (
-    <div className="space-y-6 h-full flex flex-col">
-      {control && (
-        <div className="bg-white border border-gray-200 rounded-2xl p-5 shadow-sm transition-all duration-300 ring-1 ring-black/5">
-          <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-2">Analyzed Query</p>
-          <p className="text-gray-800 leading-relaxed text-sm font-medium">{control}</p>
-        </div>
-      )}
-
-      <div className="bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden ring-1 ring-black/5 flex-grow">
+    <div className="flex flex-col flex-grow">
+      <div className="overflow-hidden">
         <table className="w-full text-left border-collapse">
           <thead>
-            <tr className="bg-gray-50/80 border-b border-gray-100">
-              <th className="px-5 py-4 font-semibold text-gray-400 text-[11px] uppercase tracking-wider w-[12%] text-center">Rank</th>
-              <th className="px-5 py-4 font-semibold text-gray-400 text-[11px] uppercase tracking-wider w-[33%] text-left">Criterion</th>
-              <th className="px-5 py-4 font-semibold text-gray-400 text-[11px] uppercase tracking-wider w-[35%] text-left">Section</th>
-              <th className="px-5 py-4 font-semibold text-gray-400 text-[11px] uppercase tracking-wider w-[20%] text-right">Score</th>
+            <tr className="border-b-[2px] border-[#FFE600]">
+              <th className="px-4 py-3 font-[600] text-[#9CA3AF] text-[11px] uppercase tracking-[0.08em] w-[10%] text-center">Rank</th>
+              <th className="px-4 py-3 font-[600] text-[#9CA3AF] text-[11px] uppercase tracking-[0.08em] w-[20%] text-left">Criterion</th>
+              <th className="px-4 py-3 font-[600] text-[#9CA3AF] text-[11px] uppercase tracking-[0.08em] w-[50%] text-left">Section</th>
+              <th className="px-4 py-3 font-[600] text-[#9CA3AF] text-[11px] uppercase tracking-[0.08em] w-[20%] text-right">Score</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-100">
+          <tbody>
             {results.map((result, idx) => (
               <tr
                 key={idx}
-                className={`cursor-pointer hover:bg-gray-50/60 transition-colors duration-200 group relative ${getBorderColor(result.rank)}`}
+                className={`cursor-pointer transition-all duration-150 group animate-slide-in border-b border-[#F3F4F6] ${getRowStyle(result.rank)}`}
+                style={{ animationDelay: `${idx * 50}ms` }}
                 onMouseEnter={(e) => handleMouseEnter(e, result)}
                 onMouseLeave={handleMouseLeave}
               >
-                <td className="px-5 py-5 text-gray-900 font-semibold align-middle">
-                  <div className="flex justify-center">
-                    <span className={`inline-flex items-center justify-center w-7 h-7 rounded-full text-xs font-bold shadow-sm transition-colors ${result.rank === 1 ? 'bg-[#FFE600] text-gray-900 ring-2 ring-yellow-400/20' : 'bg-white border border-gray-200 text-gray-500'}`}>
-                      {result.rank}
-                    </span>
-                  </div>
+                <td className="px-4 py-4 align-middle text-center">
+                  <span className="text-[13px] text-[#9CA3AF] font-[500]">{result.rank}</span>
                 </td>
-                <td className="px-5 py-5 text-gray-900 font-medium align-middle">
-                  <span className={`inline-flex items-center text-xs font-semibold px-3 py-1.5 rounded-full shadow-sm border transition-colors ${result.rank === 1 ? 'bg-yellow-100 border-yellow-200 text-yellow-800' : 'bg-white border-gray-200 text-gray-700'}`}>
-                    <span className="font-mono pt-[1px] tracking-wide">{result.criterion}</span>
+                <td className="px-4 py-4 align-middle">
+                  <span className={`font-mono font-[700] text-black ${result.rank === 1 ? 'text-[15px]' : 'text-[13px]'} tracking-wide`}>
+                    {result.criterion}
                   </span>
                 </td>
-                <td className="px-5 py-5 text-gray-500 text-sm align-middle">{result.section}</td>
-                <td className="px-5 py-5 text-right align-middle">
-                  <span className={`inline-block px-3 py-1 rounded-lg border font-mono text-[11px] font-semibold tracking-wide shadow-sm ${getScoreColor(result.score)}`}>
+                <td className="px-4 py-4 align-middle">
+                  <div className="text-[11px] font-[600] text-[#9CA3AF] uppercase truncate max-w-[220px]" title={result.section}>
+                    {result.section}
+                  </div>
+                </td>
+                <td className="px-4 py-4 text-right align-middle">
+                  <span className={`inline-block px-3 py-1 text-[12px] font-[600] tracking-wide ${getScoreStyle(result.score)}`}>
                     {result.score.toFixed(4)}
                   </span>
                 </td>
@@ -107,27 +89,35 @@ export default function ResultsTable({ results, control }) {
         </table>
       </div>
 
-      {/* Fixed Tooltip Overlay */}
-      {tooltipData && (
+      {hoveredResult && (
         <div
-          className={`fixed z-[100] w-max max-w-[320px] max-h-[400px] overflow-y-auto bg-gray-900 border border-gray-700/50 rounded-2xl shadow-2xl p-4 transition-all duration-200 pointer-events-none left-0 top-0
-            ${hoveredRank !== null ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2'}
-          `}
-          style={{ left: `${tooltipPos.x}px`, top: `${tooltipPos.y}px` }}
+          className={`fixed z-[100] w-max max-w-[340px] max-h-[400px] overflow-y-auto bg-[#FFFFFF] border border-[#E5E7EB] border-t-[4px] border-t-black p-5 pointer-events-none`}
+          style={{ 
+            left: `${tooltipPos.x}px`, 
+            top: `${tooltipPos.y}px`,
+            animation: 'slideIn 0.15s ease-out forwards'
+          }}
         >
-          <div className="font-bold text-yellow-400 text-xs mb-3 pb-2 border-b border-gray-700 uppercase tracking-wider">
-            {tooltipData.criterion}
+          <div className="mb-4 pb-3 border-b border-[#F0F0F0]">
+            <span className="font-[700] text-[#111827] text-[14px] font-mono tracking-wide">{hoveredResult.criterion}</span>
+            <span className="text-[#9CA3AF] text-[11px] uppercase font-[600] ml-3">{hoveredResult.section}</span>
           </div>
-          <div className="text-gray-300 text-xs text-left space-y-3 whitespace-normal leading-relaxed">
-            {tooltipData.bullets && tooltipData.bullets.length > 0 ? (
-              tooltipData.bullets.map((bullet, bIdx) => (
+          
+          <div className="text-[13px] text-left space-y-3 leading-relaxed">
+            {hoveredResult.bullets && hoveredResult.bullets.length > 0 ? (
+              hoveredResult.bullets.slice(0, 3).map((bullet, bIdx) => (
                 <div key={bIdx} className="flex items-start">
-                  <span className="mr-2 text-yellow-500/50 flex-shrink-0 mt-0.5">•</span>
-                  <span>{parseTooltipText(bullet)}</span>
+                  <span className="mr-2 text-[#FFE600] flex-shrink-0 mt-0.5 font-bold">•</span>
+                  <div className="flex-1">{parseTooltipText(bullet)}</div>
                 </div>
               ))
             ) : (
-              <p className="italic text-gray-500">No description available</p>
+              <p className="italic text-[#9CA3AF]">No description available</p>
+            )}
+            {hoveredResult.bullets && hoveredResult.bullets.length > 3 && (
+              <div className="text-center pt-2 text-[11px] text-[#9CA3AF] italic uppercase tracking-widest font-[700]">
+                + {hoveredResult.bullets.length - 3} MORE BULLETS
+              </div>
             )}
           </div>
         </div>

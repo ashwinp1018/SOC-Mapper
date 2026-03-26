@@ -1,6 +1,7 @@
 """
 Script to chunk the Trust Services Criteria (TSC) document into structured JSON.
 Each chunk represents a single criterion, including its description and points of focus.
+
 """
 from pathlib import Path
 import re
