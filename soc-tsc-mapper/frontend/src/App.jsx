@@ -45,6 +45,7 @@ export default function App() {
   const [bulkResults, setBulkResults] = useState([]);
   const [isBulkLoading, setIsBulkLoading] = useState(false);
   const [bulkError, setBulkError] = useState(null);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   // Stats State
   const [sessionControlsAnalyzed, setSessionControlsAnalyzed] = useState(0);
@@ -116,17 +117,33 @@ export default function App() {
   return (
     <div className="flex h-screen bg-[#F4F5F7] text-[#374151] font-sans overflow-hidden selection:bg-[#FFE600] selection:text-[#111827]">
       
+      {/* Mobile Sidebar Overlay */}
+      {isSidebarOpen && (
+        <div 
+          className="fixed inset-0 bg-black/50 z-40 md:hidden transition-opacity duration-300" 
+          onClick={() => setIsSidebarOpen(false)}
+        />
+      )}
+
       {/* Sidebar */}
-      <aside className="w-[220px] bg-[#FFFFFF] border-r-[4px] border-[#FFE600] flex flex-col flex-shrink-0 z-20">
+      <aside className={`fixed inset-y-0 left-0 transform ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'} transition-transform duration-300 ease-in-out md:relative md:translate-x-0 w-[220px] bg-[#FFFFFF] border-r-[4px] border-[#FFE600] flex flex-col flex-shrink-0 z-50`}>
         <div className="p-6">
-          <h1 className="text-[28px] font-[900] text-black tracking-tight cursor-default select-none leading-none">EY</h1>
+          <div className="flex items-center justify-between">
+            <h1 className="text-[28px] font-[900] text-black tracking-tight cursor-default select-none leading-none">EY</h1>
+            <button 
+              className="md:hidden text-[#9CA3AF] hover:text-black focus:outline-none" 
+              onClick={() => setIsSidebarOpen(false)}
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+            </button>
+          </div>
           <p className="text-[10px] font-[500] text-[#9CA3AF] uppercase tracking-[0.15em] mt-[2px]">SOC TSC MAPPER</p>
           <div className="border-b-[2px] border-[#FFE600] w-full my-4"></div>
         </div>
         
         <nav className="flex-1 px-3 py-2 space-y-1 overflow-y-auto">
           <button
-            onClick={() => setMode('single')}
+            onClick={() => { setMode('single'); setIsSidebarOpen(false); }}
             className={`w-full flex items-center px-4 py-[10px] text-[14px] transition-colors duration-150 ${
               mode === 'single' 
                 ? 'bg-[#FFE600] text-black font-[700]' 
@@ -138,7 +155,7 @@ export default function App() {
           </button>
           
           <button
-            onClick={() => setMode('bulk')}
+            onClick={() => { setMode('bulk'); setIsSidebarOpen(false); }}
             className={`w-full flex items-center px-4 py-[10px] text-[14px] transition-colors duration-150 ${
               mode === 'bulk' 
                 ? 'bg-[#FFE600] text-black font-[700]' 
@@ -178,26 +195,34 @@ export default function App() {
       <main className="flex-1 flex flex-col h-screen overflow-hidden">
         
         {/* Top Navbar */}
-        <header className="h-[72px] bg-[#FFFFFF] border-b-[2px] border-[#FFE600] flex items-center justify-between px-8 flex-shrink-0 z-10">
-          <div className="flex flex-col justify-center">
-            <h2 className="text-[20px] font-[700] text-black">
-              {mode === 'single' ? 'Single Analysis' : 'Bulk Control Analysis'}
-            </h2>
-            <p className="text-[12px] text-[#9CA3AF] font-[500] mt-0.5 tracking-wide">
-              EY / SOC TSC Mapper / {mode === 'single' ? 'Single Analysis' : 'Bulk Control Analysis'}
-            </p>
+        <header className="h-[72px] bg-[#FFFFFF] border-b-[2px] border-[#FFE600] flex items-center justify-between px-4 md:px-8 flex-shrink-0 z-10">
+          <div className="flex items-center">
+            <button 
+              className="mr-4 md:hidden text-[#6B7280] hover:text-black focus:outline-none" 
+              onClick={() => setIsSidebarOpen(true)}
+            >
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
+            </button>
+            <div className="flex flex-col justify-center">
+              <h2 className="text-[16px] md:text-[20px] font-[700] text-black truncate max-w-[150px] sm:max-w-none">
+                {mode === 'single' ? 'Single Analysis' : 'Bulk Control Analysis'}
+              </h2>
+              <p className="hidden sm:block text-[12px] text-[#9CA3AF] font-[500] mt-0.5 tracking-wide">
+                EY / SOC TSC Mapper / {mode === 'single' ? 'Single Analysis' : 'Bulk Control Analysis'}
+              </p>
+            </div>
           </div>
-          <div className="flex items-center space-x-4">
-            <span className="px-3 py-1 bg-[#FFFFFF] text-[#6B7280] text-[12px] font-[600] border border-[#E5E7EB]">
+          <div className="flex items-center space-x-2 md:space-x-4">
+            <span className="hidden sm:inline-block px-3 py-1 bg-[#FFFFFF] text-[#6B7280] text-[12px] font-[600] border border-[#E5E7EB]">
               EY Internal Tool
             </span>
-            <span className="text-[13px] font-[500] text-[#6B7280] tracking-wide">{currentDate}</span>
+            <span className="text-[12px] md:text-[13px] font-[500] text-[#6B7280] tracking-wide whitespace-nowrap">{currentDate}</span>
           </div>
         </header>
 
         {/* Scrollable Content */}
-        <div className="flex-1 overflow-y-auto p-8">
-          <div className="max-w-[1280px] mx-auto min-w-[700px] hidden-scrollbar">
+        <div className="flex-1 overflow-y-auto p-4 md:p-8">
+          <div className="max-w-[1280px] mx-auto w-full hidden-scrollbar">
             
             {mode === 'single' && (
               <div className="space-y-[24px]">
@@ -248,7 +273,7 @@ export default function App() {
                 <div className="grid grid-cols-1 lg:grid-cols-[450px_1fr] gap-[24px] items-start">
                   
                   {/* Left Card: Input */}
-                  <div className="bg-[#FFFFFF] border border-[#E5E7EB] border-l-[2px] border-l-[#FFE600] sticky top-0" style={{ padding: '24px' }}>
+                  <div className="bg-[#FFFFFF] border border-[#E5E7EB] border-l-[2px] border-l-[#FFE600] sticky top-0 p-4 sm:p-6">
                     <div className="flex items-center justify-between mb-5 border-b border-[#F0F0F0] pb-4">
                       <h2 className="text-[14px] font-[700] text-black uppercase tracking-wide">
                         Audit Control Description
@@ -259,7 +284,7 @@ export default function App() {
                   </div>
                   
                   {/* Right Card: Results */}
-                  <div className="bg-[#FFFFFF] border border-[#E5E7EB] border-t-[2px] border-t-black min-h-[500px] flex flex-col" style={{ padding: '24px' }}>
+                  <div className="bg-[#FFFFFF] border border-[#E5E7EB] border-t-[2px] border-t-black min-h-[500px] flex flex-col p-4 sm:p-6">
                     <div className="flex items-center justify-between mb-5 border-b border-[#F0F0F0] pb-4">
                        <h2 className="text-[14px] font-[700] text-black uppercase tracking-wide">
                          Matching TSC Criteria
@@ -305,7 +330,7 @@ export default function App() {
 
             {mode === 'bulk' && (
               <div className="space-y-[24px] pb-20">
-                <div className="bg-[#FFFFFF] border border-[#E5E7EB] border-l-[2px] border-l-[#FFE600]" style={{ padding: '24px' }}>
+                <div className="bg-[#FFFFFF] border border-[#E5E7EB] border-l-[2px] border-l-[#FFE600] p-4 sm:p-6">
                   <div className="flex items-center justify-between mb-5 border-b border-[#F0F0F0] pb-4">
                      <div>
                        <h2 className="text-[14px] font-[700] text-black uppercase tracking-wide">Bulk Control Analysis</h2>
@@ -317,7 +342,7 @@ export default function App() {
                 </div>
                 
                 {isBulkLoading ? (
-                  <div className="bg-[#FFFFFF] border border-[#E5E7EB] min-h-[400px] flex flex-col pt-[48px] relative overflow-hidden line-bottom" style={{ padding: '24px' }}>
+                  <div className="bg-[#FFFFFF] border border-[#E5E7EB] min-h-[400px] flex flex-col pt-[48px] relative overflow-hidden line-bottom p-4 sm:p-6">
                      {/* Progress bar line */}
                      <div className="absolute top-0 left-0 w-1/3 h-[3px] bg-[#FFE600] shadow-[0_0_8px_#FFE600] animate-shimmer"></div>
                      <div className="text-center mb-8">
@@ -330,7 +355,7 @@ export default function App() {
                      </div>
                   </div>
                 ) : bulkError ? (
-                  <div className="bg-[#FFFFFF] border border-[#E5E7EB] border-t-[2px] border-t-black" style={{ padding: '24px' }}>
+                  <div className="bg-[#FFFFFF] border border-[#E5E7EB] border-t-[2px] border-t-black p-4 sm:p-6">
                     <div className="bg-[#FEF2F2] border-l-4 border-[#991B1B] p-5 text-[14px]">
                       <p className="font-[600] text-[#991B1B] mb-2 flex items-center">
                         <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd"></path></svg>

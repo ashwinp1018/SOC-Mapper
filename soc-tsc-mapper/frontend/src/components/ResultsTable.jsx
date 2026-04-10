@@ -46,8 +46,8 @@ export default function ResultsTable({ results }) {
 
   return (
     <div className="flex flex-col flex-grow">
-      <div className="overflow-hidden">
-        <table className="w-full text-left border-collapse">
+      <div className="overflow-x-auto hidden-scrollbar">
+        <table className="w-full text-left border-collapse min-w-[500px]">
           <thead>
             <tr className="border-b-[2px] border-[#FFE600]">
               <th className="px-4 py-3 font-[600] text-[#9CA3AF] text-[11px] uppercase tracking-[0.08em] w-[10%] text-center">Rank</th>
