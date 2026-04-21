@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { createPortal } from 'react-dom';
 
 export default function ResultsTable({ results }) {
   const [hoveredResult, setHoveredResult] = useState(null);
@@ -89,7 +90,7 @@ export default function ResultsTable({ results }) {
         </table>
       </div>
 
-      {hoveredResult && (
+      {hoveredResult && createPortal(
         <div
           className={`fixed z-[100] w-max max-w-[340px] max-h-[400px] overflow-y-auto bg-[#FFFFFF] border border-[#E5E7EB] border-t-[4px] border-t-black p-5 pointer-events-none`}
           style={{ 
@@ -120,7 +121,8 @@ export default function ResultsTable({ results }) {
               </div>
             )}
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );

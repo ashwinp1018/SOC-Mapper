@@ -115,7 +115,9 @@ export default function App() {
   const currentDate = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 
   return (
-    <div className="flex h-screen bg-[#F4F5F7] text-[#374151] font-sans overflow-hidden selection:bg-[#FFE600] selection:text-[#111827]">
+    <>
+      <div className="fixed top-0 left-0 right-0 h-[4px] bg-[#FFE600] z-[200]" />
+      <div className="flex h-screen bg-[#F4F5F7] text-[#374151] font-sans overflow-hidden selection:bg-[#FFE600] selection:text-[#111827] pt-[4px]">
       
       {/* Mobile Sidebar Overlay */}
       {isSidebarOpen && (
@@ -376,6 +378,7 @@ export default function App() {
         </div>
       </main>
 
-    </div>
+      </div>
+    </>
   );
 }
