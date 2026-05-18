@@ -4,7 +4,12 @@ Minimal FastAPI app exposing a /match-control endpoint.
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from app.schemas import MatchRequest, MatchResponse
-from app.matcher import match_control
+from app.matcher import match_control, openai_client
+from dotenv import load_dotenv
+import os
+
+# Load environment variables from .env file
+load_dotenv(override=True)
 
 app = FastAPI(title="SOC TSC Matcher")
 
@@ -148,6 +153,66 @@ async def match_bulk(request: dict):
         raise
     except Exception as e:
         print(f"[BULK EXCEPTION] {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/generate-narrative")
+async def generate_narrative(request: dict):
+    print(f"[NARRATIVE] Generating for control: {request.get('control_text', '')[:80]}...")
+    print(f"[NARRATIVE] Criteria: {request.get('criteria', [])}")
+    
+    try:
+        control_text = request.get("control_text", "").strip()
+        criteria = request.get("criteria", [])
+        
+        if not control_text:
+            raise HTTPException(status_code=400, detail="Control text cannot be empty")
+        
+        criteria_str = ", ".join(criteria) if criteria else "Not specified"
+        
+        system_prompt = """You are an EY senior auditor writing testing narratives 
+for a SOC 2 Type II audit report. Your narratives must:
+- Be written in professional audit language
+- Follow EY's standard testing documentation style
+- Start with "Inspected..." or "For a sample of..." or "Obtained and reviewed..."
+- Be specific to the control being tested
+- Reference the mapped Trust Services Criteria
+- Be concise but complete (2-4 sentences maximum)
+- Never use first person (no "we" or "I")
+- Use past tense throughout
+- Sound like it was written by an experienced Big 4 auditor
+- Do not include any preamble or explanation, output ONLY the narrative text"""
+
+        user_prompt = f"""Write a SOC 2 audit testing narrative for the following control:
+
+Control Description:
+{control_text}
+
+Mapped Trust Services Criteria: {criteria_str}
+
+Write the testing narrative that describes what EY performed to test 
+this control. Output only the narrative text, nothing else."""
+
+        response = openai_client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": user_prompt}
+            ],
+            max_tokens=300,
+            temperature=0.3
+        )
+        
+        narrative = response.choices[0].message.content.strip()
+        print(f"[NARRATIVE] Generated successfully: {narrative[:80]}...")
+        
+        return {
+            "narrative": narrative,
+            "criteria": criteria,
+            "control_preview": control_text[:100]
+        }
+    
+    except Exception as e:
+        print(f"[NARRATIVE ERROR] {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
 # To run: uvicorn app.main:app --reload

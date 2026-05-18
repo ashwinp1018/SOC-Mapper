@@ -11,7 +11,11 @@ import faiss
 from app.hybrid_retriever import HybridRetriever
 
 import os
+from dotenv import load_dotenv
 from openai import OpenAI
+
+# Load environment variables from .env file
+load_dotenv(override=True)
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 INDEX_PATH = BASE_DIR / 'data' / 'processed' / 'tsc_faiss.index'

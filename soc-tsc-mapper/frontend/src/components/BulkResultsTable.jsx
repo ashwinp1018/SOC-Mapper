@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
+import { generateNarrative } from "../api/match";
 
 const TESTING_RESULTS_OPTIONS = [
   "-- Select --",
@@ -19,6 +20,8 @@ export default function BulkResultsTable({ results }) {
 
   const [addingCriterionId, setAddingCriterionId] = useState(null);
   const [newCriterionValue, setNewCriterionValue] = useState("");
+
+  const [generatingRows, setGeneratingRows] = useState(new Set());
 
   const [visibleColumns, setVisibleColumns] = useState({
     criteria: true,
@@ -72,6 +75,39 @@ export default function BulkResultsTable({ results }) {
     steps.splice(stepIndex, 1);
     newData[rowIndex].testing_performed = steps.length > 0 ? steps : [""];
     setEditableResults(newData);
+  };
+
+  const handleGenerateNarrative = async (idx) => {
+    const row = editableResults[idx];
+    const controlText = row.control_text || "";
+    const criteria = row.matches?.map(m => m.criterion) || [];
+    
+    if (!controlText.trim()) {
+      console.warn("[GENERATE] No control text for row", idx);
+      return;
+    }
+    
+    console.log("[GENERATE] Starting generation for row", idx);
+    setGeneratingRows(prev => new Set([...prev, idx]));
+    
+    try {
+      const result = await generateNarrative(controlText, criteria);
+      handleUpdateField(idx, "testing_performed", result.narrative);
+      console.log("[GENERATE] Success for row", idx);
+    } catch (err) {
+      console.error("[GENERATE ERROR]", err);
+      handleUpdateField(
+        idx, 
+        "testing_performed", 
+        "Error generating narrative. Please try again."
+      );
+    } finally {
+      setGeneratingRows(prev => {
+        const next = new Set(prev);
+        next.delete(idx);
+        return next;
+      });
+    }
   };
 
   const handleRemoveCriterion = (rowIndex, matchIndex) => {
@@ -379,6 +415,18 @@ export default function BulkResultsTable({ results }) {
           </div>
 
           <button
+            onClick={async () => {
+              for (let i = 0; i < editableResults.length; i++) {
+                await handleGenerateNarrative(i);
+              }
+            }}
+            disabled={generatingRows.size > 0}
+            className="flex items-center px-5 h-[40px] bg-[#FFFFFF] text-[#111827] hover:bg-[#FFFBCC] font-[800] tracking-[0.05em] uppercase transition-all duration-150 text-[13px] disabled:opacity-50 disabled:cursor-not-allowed border-[2px] border-[#FFE600]"
+          >
+            ✦ GENERATE ALL
+          </button>
+
+          <button
             onClick={handleExportPDF}
             disabled={editableResults.length === 0}
             className="flex items-center px-5 h-[40px] bg-[#FFE600] text-[#111827] hover:bg-[#FFD700] hover:-translate-y-[1px] active:translate-y-[0px] font-[800] tracking-[0.05em] uppercase transition-all duration-150 text-[13px] disabled:opacity-50 disabled:cursor-not-allowed border-l-[4px] border-l-[#D4A017]"
@@ -392,12 +440,12 @@ export default function BulkResultsTable({ results }) {
         <table className="w-full text-left table-fixed min-w-[1200px] border-collapse">
           <thead>
             <tr className="border-b-[2px] border-[#FFE600] bg-[#FAFAFA]">
-              <th className="px-5 py-4 font-[600] text-[#9CA3AF] text-[11px] uppercase tracking-[0.08em] w-[4%] text-center border-r border-[#F0F0F0]">#</th>
-              <th className="px-5 py-4 font-[600] text-[#9CA3AF] text-[11px] uppercase tracking-[0.08em] w-[24%] border-r border-[#F0F0F0]">Control Description</th>
-              {visibleColumns.criteria && <th className="px-5 py-4 font-[600] text-[#9CA3AF] text-[11px] uppercase tracking-[0.08em] w-[20%] border-r border-[#F0F0F0]">Criteria</th>}
-              {visibleColumns.testing && <th className="px-5 py-4 font-[600] text-[#9CA3AF] text-[11px] uppercase tracking-[0.08em] w-[22%] border-r border-[#F0F0F0]">Testing Performed</th>}
-              {visibleColumns.results && <th className="px-5 py-4 font-[600] text-[#9CA3AF] text-[11px] uppercase tracking-[0.08em] w-[14%] border-r border-[#F0F0F0]">Results</th>}
-              {visibleColumns.comments && <th className="px-5 py-4 font-[600] text-[#9CA3AF] text-[11px] uppercase tracking-[0.08em] w-[16%]">Comments</th>}
+              <th className="px-5 py-4 font-[600] text-[#9CA3AF] text-[11px] uppercase tracking-[0.08em] w-[3%] text-center border-r border-[#F0F0F0]">#</th>
+              <th className="px-5 py-4 font-[600] text-[#9CA3AF] text-[11px] uppercase tracking-[0.08em] w-[20%] border-r border-[#F0F0F0]">Control Description</th>
+              {visibleColumns.criteria && <th className="px-5 py-4 font-[600] text-[#9CA3AF] text-[11px] uppercase tracking-[0.08em] w-[15%] border-r border-[#F0F0F0]">Criteria</th>}
+              {visibleColumns.testing && <th className="px-5 py-4 font-[600] text-[#9CA3AF] text-[11px] uppercase tracking-[0.08em] w-[30%] border-r border-[#F0F0F0]">Testing Performed</th>}
+              {visibleColumns.results && <th className="px-5 py-4 font-[600] text-[#9CA3AF] text-[11px] uppercase tracking-[0.08em] w-[12%] border-r border-[#F0F0F0]">Results</th>}
+              {visibleColumns.comments && <th className="px-5 py-4 font-[600] text-[#9CA3AF] text-[11px] uppercase tracking-[0.08em] w-[20%]">Comments</th>}
             </tr>
           </thead>
           <tbody className="divide-y divide-[#F3F4F6]">
@@ -442,14 +490,15 @@ export default function BulkResultsTable({ results }) {
                         {r.matches && r.matches.map((m, mIdx) => (
                           <span
                             key={mIdx}
-                            className="inline-flex items-center text-[12px] font-[700] text-[#92400E] bg-[#FFFBCC] border-[2px] border-[#FFE600] pl-2 pr-1 py-0.5 transition-colors cursor-help group/tag"
+                            className="relative group/tag inline-flex items-center rounded-sm text-[12px] font-[700] text-[#92400E] bg-[#FFFBCC] border border-[#FFE600] pl-2 py-1 pr-6 transition-colors cursor-help"
                             onMouseEnter={(e) => handleMouseEnter(e, m)}
                             onMouseLeave={handleMouseLeave}
                           >
-                            <span className="tracking-wide font-mono pt-[1px]">{m.criterion}</span>
+                            <span className="tracking-wide font-mono">{m.criterion}</span>
                             <button
+                              type="button"
                               onClick={() => handleRemoveCriterion(idx, mIdx)}
-                              className="ml-1 p-0.5 text-[#92400E] hover:text-[#EF4444] transition-colors flex items-center justify-center opacity-70 hover:opacity-100"
+                              className="absolute top-0 right-0 p-0.5 text-[#92400E] hover:text-[#EF4444] opacity-0 group-hover/tag:opacity-100 transition-opacity flex items-center justify-center"
                               title="Remove Tag"
                             >
                               <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="3"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12"></path></svg>
@@ -473,10 +522,12 @@ export default function BulkResultsTable({ results }) {
                           </div>
                         ) : (
                           <button
+                            type="button"
                             onClick={() => setAddingCriterionId(idx)}
-                            className="inline-flex items-center justify-center text-[11px] font-[700] uppercase tracking-wider text-[#6B7280] bg-transparent hover:bg-[#fffdf2] hover:text-[#111827] px-2 py-1 border-[2px] border-dashed border-[#D1D5DB] hover:border-[#FFE600] transition-colors"
+                            className="inline-flex items-center justify-center w-7 h-7 shrink-0 text-[#6B7280] bg-transparent hover:bg-[#FFFBCC] hover:text-[#111827] border border-dashed border-[#D1D5DB] hover:border-[#FFE600] transition-colors"
+                            title="Add criterion"
                           >
-                            + ADD
+                            <span className="text-[18px] font-[700] leading-none">+</span>
                           </button>
                         )}
                       </div>
@@ -485,35 +536,74 @@ export default function BulkResultsTable({ results }) {
                 )}
 
                 {visibleColumns.testing && (
-                  <td className="px-5 py-4 align-top border-r border-[#F3F4F6]">
-                    <div className="flex flex-col gap-2">
-                      {(Array.isArray(r.testing_performed) ? r.testing_performed : [r.testing_performed || ""]).map((step, sIdx) => (
-                        <div key={sIdx} className="flex items-start gap-1">
-                          <span className="text-[#FFE600] font-bold text-[14px] mt-[9px] select-none flex-shrink-0 leading-none">•</span>
-                          <textarea
-                            value={step}
-                            onChange={(e) => handleUpdateTestingStep(idx, sIdx, e.target.value)}
-                            className="flex-1 bg-transparent text-[#374151] font-[500] text-[13px] outline-none border border-transparent border-b-[2px] border-b-[#E5E7EB] focus:border-[2px] focus:border-[#FFE600] focus:bg-[#FFFFFF] transition-all duration-150 resize-none placeholder-[#9CA3AF] p-2 min-h-[36px]"
-                            placeholder={sIdx === 0 ? "Enter testing step..." : "Next step..."}
-                            rows={1}
-                          />
-                          {(Array.isArray(r.testing_performed) ? r.testing_performed : [""]).length > 1 && (
-                            <button
-                              onClick={() => handleRemoveTestingStep(idx, sIdx)}
-                              className="mt-[10px] text-[#9CA3AF] hover:text-[#EF4444] transition-colors p-0.5 flex-shrink-0"
-                              title="Remove step"
-                            >
-                              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
-                            </button>
-                          )}
-                        </div>
-                      ))}
+                  <td className="pl-0 pr-5 py-0 align-top border-r border-[#F3F4F6]">
+                    <div className="flex flex-row items-stretch min-h-0">
                       <button
-                        onClick={() => handleAddTestingStep(idx)}
-                        className="inline-flex items-center text-[11px] font-[700] uppercase tracking-wider text-[#6B7280] hover:text-[#111827] hover:bg-[#fffdf2] px-2 py-1 border-[2px] border-dashed border-[#E5E7EB] hover:border-[#FFE600] transition-colors self-start mt-1"
+                        type="button"
+                        onClick={() => handleGenerateNarrative(idx)}
+                        disabled={generatingRows.has(idx)}
+                        className={`
+                          group/autogen w-8 shrink-0 self-stretch flex items-center justify-center
+                          bg-[#FFFBCC] border-0 border-r-[2px] border-r-[#FFE600] border-solid
+                          transition-colors duration-150
+                          ${generatingRows.has(idx)
+                            ? "cursor-wait"
+                            : "cursor-pointer hover:bg-[#FFE600]"
+                          }
+                        `}
                       >
-                        + STEP
+                        {generatingRows.has(idx) ? (
+                          <svg className="animate-spin h-5 w-5 text-[#111827]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" aria-hidden>
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                          </svg>
+                        ) : (
+                          <span className="text-[10px] font-extrabold uppercase tracking-[0.1em] text-[#92400E] group-hover/autogen:text-[#111827] [writing-mode:vertical-rl] [text-orientation:mixed]">
+                            AUTO-GENERATE
+                          </span>
+                        )}
                       </button>
+                      <div className="flex-1 flex flex-col gap-2 min-w-0 py-4 pl-3">
+                        {typeof r.testing_performed === 'string' ? (
+                          <textarea
+                            value={r.testing_performed}
+                            onChange={(e) => handleUpdateField(idx, "testing_performed", e.target.value)}
+                            className="w-full min-w-0 bg-transparent text-[#374151] font-[500] text-[13px] outline-none border border-transparent border-b-[2px] border-b-[#E5E7EB] focus:border-[2px] focus:border-[#FFE600] focus:bg-[#FFFFFF] transition-all duration-150 resize-none placeholder-[#9CA3AF] p-2"
+                            placeholder="Enter testing specifics or use Auto-Generate beside this field..."
+                            rows={5}
+                          />
+                        ) : (
+                          <div>
+                            {(Array.isArray(r.testing_performed) ? r.testing_performed : [r.testing_performed || ""]).map((step, sIdx) => (
+                              <div key={sIdx} className="flex items-start gap-1">
+                                <span className="text-[#FFE600] font-bold text-[14px] mt-2 select-none flex-shrink-0 leading-none">•</span>
+                                <textarea
+                                  value={step}
+                                  onChange={(e) => handleUpdateTestingStep(idx, sIdx, e.target.value)}
+                                  className="flex-1 min-w-0 bg-transparent text-[#374151] font-[500] text-[13px] outline-none border border-transparent border-b-[2px] border-b-[#E5E7EB] focus:border-[2px] focus:border-[#FFE600] focus:bg-[#FFFFFF] transition-all duration-150 resize-none placeholder-[#9CA3AF] p-2"
+                                  placeholder={sIdx === 0 ? "Enter testing step..." : "Next step..."}
+                                  rows={5}
+                                />
+                                {(Array.isArray(r.testing_performed) ? r.testing_performed : [""]).length > 1 && (
+                                  <button
+                                    onClick={() => handleRemoveTestingStep(idx, sIdx)}
+                                    className="mt-2 text-[#9CA3AF] hover:text-[#EF4444] transition-colors p-0.5 flex-shrink-0"
+                                    title="Remove step"
+                                  >
+                                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+                                  </button>
+                                )}
+                              </div>
+                            ))}
+                            <button
+                              onClick={() => handleAddTestingStep(idx)}
+                              className="inline-flex items-center text-[11px] font-[700] uppercase tracking-wider text-[#6B7280] hover:text-[#111827] hover:bg-[#fffdf2] px-2 py-1 border-[2px] border-dashed border-[#E5E7EB] hover:border-[#FFE600] transition-colors self-start mt-1"
+                            >
+                              + STEP
+                            </button>
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </td>
                 )}

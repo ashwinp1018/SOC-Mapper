@@ -44,7 +44,11 @@ import numpy as np
 import faiss
 
 import os
+from dotenv import load_dotenv
 from openai import OpenAI
+
+# Load environment variables from .env file
+load_dotenv()
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 CHUNKS_PATH = BASE_DIR / 'data' / 'processed' / 'tsc_chunks.json'

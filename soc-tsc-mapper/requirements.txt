@@ -4,3 +4,8 @@ numpy
 faiss-cpu
 pydantic
 openai>=1.0.0
+python-dotenv
+anthropic
+rank-bm25
+jsPDF
+

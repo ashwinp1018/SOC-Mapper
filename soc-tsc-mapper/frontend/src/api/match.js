@@ -56,3 +56,27 @@ export async function callMatchBulk(controls, alpha) {
     throw error;
   }
 }
+
+export async function generateNarrative(controlText, criteria) {
+  console.log("[API] Generating narrative for criteria:", criteria);
+  
+  const response = await fetch("http://localhost:8000/generate-narrative", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      control_text: controlText,
+      criteria: criteria
+    })
+  });
+  
+  console.log("[API] Narrative response status:", response.status);
+  
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.detail || "Failed to generate narrative");
+  }
+  
+  const data = await response.json();
+  console.log("[API] Narrative received:", data.narrative?.substring(0, 80));
+  return data;
+}
