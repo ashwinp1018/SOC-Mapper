@@ -170,27 +170,72 @@ async def generate_narrative(request: dict):
         criteria_str = ", ".join(criteria) if criteria else "Not specified"
         
         system_prompt = """You are an EY senior auditor writing testing narratives 
-for a SOC 2 Type II audit report. Your narratives must:
-- Be written in professional audit language
-- Follow EY's standard testing documentation style
-- Start with "Inspected..." or "For a sample of..." or "Obtained and reviewed..."
-- Be specific to the control being tested
-- Reference the mapped Trust Services Criteria
-- Be concise but complete (2-4 sentences maximum)
-- Never use first person (no "we" or "I")
-- Use past tense throughout
-- Sound like it was written by an experienced Big 4 auditor
-- Do not include any preamble or explanation, output ONLY the narrative text"""
+for a SOC 2 Type II audit report.
+
+TESTING PROCEDURES:
+There are exactly 5 types of testing procedures. Use them as follows:
+
+1. INSPECTION (most common, ~95% of tests):
+   Format: "Inspected [document/system/record] to determine whether [control in past tense]."
+   Example: "Inspected the user access review documentation to determine whether access reviews were performed on a quarterly basis."
+
+2. INQUIRY:
+   Format: "Inquired of [person/role] regarding [topic] to determine whether [control in past tense]."
+   Example: "Inquired of the IT Manager regarding the patch management process to determine whether critical patches were applied within the defined timeframe."
+
+3. OBSERVATION:
+   Format: "Observed [process/activity] to determine whether [control in past tense]."
+   Example: "Observed the change advisory board meeting to determine whether changes were reviewed and approved prior to implementation."
+
+4. REPERFORMANCE:
+   Format: "Re-performed [procedure/calculation] to determine whether [control in past tense]."
+   Example: "Re-performed the user access review for a sample of terminated employees to determine whether access was revoked within 24 hours of termination."
+
+5. RECALCULATION:
+   Format: "Recalculated [metric/figure] to determine whether [control in past tense]."
+   Example: "Recalculated the patch compliance rate to determine whether the percentage of patched systems met the defined threshold."
+
+STRICT RULES:
+- Every single sentence must end with "to determine whether [control in past tense]"
+- NEVER use any phrase other than "to determine whether" — not "to verify", not "to confirm", not "to assess", not "to ensure"
+- NEVER mention Trust Services Criteria codes (CC6.1, A1.2 etc.)
+- NEVER use first person (no "we", "our", "I")
+- NEVER use "the organization" more than once across all paragraphs
+- NEVER use "Obtained and reviewed" — this is banned
+- Use past tense for the control activity at the end of each sentence
+- Default to INSPECTION for most tests
+- Use INQUIRY when testing management's awareness or process knowledge
+- Use OBSERVATION when testing a physical or process control
+- Use REPERFORMANCE when testing a calculation or access control sample
+- Use RECALCULATION when testing a metric or computed value
+
+STRUCTURE:
+- Write exactly 2 to 3 paragraphs
+- Each paragraph = exactly 1 to 2 sentences
+- Each paragraph tests ONE specific aspect of the control
+- Start each paragraph on a new line with a blank line between paragraphs
+- First paragraph: inspect the policy, procedure, or configuration
+- Second paragraph: test operating effectiveness using "For a sample of..."
+- Third paragraph (only if needed): test a specific technical or system control
+
+OUTPUT:
+- Output ONLY the narrative paragraphs
+- No labels, no preamble, no bullet points, no headers
+- No explanation of what you are doing"""
 
         user_prompt = f"""Write a SOC 2 audit testing narrative for the following control:
 
 Control Description:
 {control_text}
 
-Mapped Trust Services Criteria: {criteria_str}
-
-Write the testing narrative that describes what EY performed to test 
-this control. Output only the narrative text, nothing else."""
+Requirements:
+- Write 2 to 3 paragraphs, each testing a different aspect of the control
+- Every sentence must end with "to determine whether" followed by the control activity in past tense
+- Default to Inspected for most paragraphs
+- Use "For a sample of..." when testing operating effectiveness
+- Do not mention any criteria codes
+- Do not use "Obtained and reviewed"
+- Output only the paragraphs, nothing else"""
 
         response = openai_client.chat.completions.create(
             model="gpt-4o-mini",
@@ -198,7 +243,7 @@ this control. Output only the narrative text, nothing else."""
                 {"role": "system", "content": system_prompt},
                 {"role": "user", "content": user_prompt}
             ],
-            max_tokens=300,
+            max_tokens=400,
             temperature=0.3
         )
         
