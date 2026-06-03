@@ -16,3 +16,4 @@ class MatchResult(BaseModel):
 
 class MatchResponse(BaseModel):
     matches: List[MatchResult]
+

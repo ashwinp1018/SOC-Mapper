@@ -4,6 +4,24 @@ import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { generateNarrative } from "../api/match";
 
+const ALL_CRITERIA = [
+  "CC1.1","CC1.2","CC1.3","CC1.4","CC1.5",
+  "CC2.1","CC2.2","CC2.3",
+  "CC3.1","CC3.2","CC3.3","CC3.4",
+  "CC4.1","CC4.2",
+  "CC5.1","CC5.2","CC5.3",
+  "CC6.1","CC6.2","CC6.3","CC6.4","CC6.5","CC6.6","CC6.7","CC6.8",
+  "CC7.1","CC7.2","CC7.3","CC7.4","CC7.5",
+  "CC8.1",
+  "CC9.1","CC9.2",
+  "A1.1","A1.2","A1.3",
+  "C1.1","C1.2",
+  "PI1.1","PI1.2","PI1.3","PI1.4","PI1.5",
+  "P1.1","P2.1","P3.1","P3.2","P4.1","P4.2","P4.3",
+  "P5.1","P5.2","P6.1","P6.2","P6.3","P6.4","P6.5","P6.6","P6.7",
+  "P7.1","P8.1"
+];
+
 const TESTING_RESULTS_OPTIONS = [
   "-- Select --",
   "No deviations noted",
@@ -18,8 +36,8 @@ export default function BulkResultsTable({ results }) {
   const [hoveredResult, setHoveredResult] = useState(null);
   const [tooltipPos, setTooltipPos] = useState({ x: 0, y: 0 });
 
-  const [addingCriterionId, setAddingCriterionId] = useState(null);
-  const [newCriterionValue, setNewCriterionValue] = useState("");
+  const [openPickerIdx, setOpenPickerIdx] = useState(null);
+  const [pickerSearch, setPickerSearch] = useState("");
 
   const [generatingRows, setGeneratingRows] = useState(new Set());
 
@@ -40,6 +58,21 @@ export default function BulkResultsTable({ results }) {
       comments: ""
     })));
   }, [results]);
+
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (openPickerIdx !== null) {
+        const picker = document.getElementById(`picker-${openPickerIdx}`);
+        const addBtn = document.getElementById(`addbtn-${openPickerIdx}`);
+        if (picker && !picker.contains(e.target) && addBtn && !addBtn.contains(e.target)) {
+          setOpenPickerIdx(null);
+          setPickerSearch("");
+        }
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [openPickerIdx]);
 
   const handleUpdateField = (index, field, value) => {
     const newData = [...editableResults];
@@ -116,16 +149,12 @@ export default function BulkResultsTable({ results }) {
     setEditableResults(newData);
   };
 
-  const handleAddCriterionSubmit = (index) => {
-    if (newCriterionValue.trim()) {
-      const match = { criterion: newCriterionValue.trim(), score: 0, section: "User Defined", bullets: [] };
-      const newData = [...editableResults];
-      if (!newData[index].matches) newData[index].matches = [];
-      newData[index].matches.push(match);
-      setEditableResults(newData);
-    }
-    setAddingCriterionId(null);
-    setNewCriterionValue("");
+  const handlePickCriterion = (rowIdx, criterion) => {
+    const match = { criterion: criterion, score: 0, section: "User Defined", bullets: [] };
+    const newData = [...editableResults];
+    if (!newData[rowIdx].matches) newData[rowIdx].matches = [];
+    newData[rowIdx].matches.push(match);
+    setEditableResults(newData);
   };
 
   const handleAddRow = () => {
@@ -165,6 +194,20 @@ export default function BulkResultsTable({ results }) {
       }
       return <span key={index} className="text-[#374151]">{part.trim()}</span>;
     });
+  };
+
+  const calculateSummaryLine = () => {
+    if (editableResults.length === 0) return "";
+    const controlCount = editableResults.length;
+    const criteriaSet = new Set();
+    editableResults.forEach(row => {
+      row.matches?.forEach(match => {
+        const prefix = match.criterion.match(/^[A-Z]+/);
+        if (prefix) criteriaSet.add(prefix[0]);
+      });
+    });
+    const familyCount = criteriaSet.size;
+    return `${controlCount} control${controlCount !== 1 ? 's' : ''} mapped across ${familyCount} unique criteria famil${familyCount !== 1 ? 'ies' : 'y'}`;
   };
 
   const handleExportPDF = () => {
@@ -373,7 +416,7 @@ export default function BulkResultsTable({ results }) {
             Review & Edit Mapping Results
           </h2>
           <p className="text-[#6B7280] text-[13px] max-w-2xl">
-            Modify criteria and add audit notes before exporting
+            {calculateSummaryLine()}
           </p>
         </div>
 
@@ -450,7 +493,7 @@ export default function BulkResultsTable({ results }) {
           </thead>
           <tbody className="divide-y divide-[#F3F4F6]">
             {editableResults.map((r, idx) => (
-              <tr key={idx} className="hover:bg-[#fffdf2] transition-colors duration-150 group">
+              <tr key={idx} className="hover:bg-[#fffdf2] transition-colors duration-150 group" style={{ animation: `rowEntrance 0.3s ease-out ${idx * 60}ms both`, overflow:'visible' }}>
                 <td className="px-3 py-5 align-top border-r border-[#F3F4F6]">
                   <div className="flex flex-col items-center pt-2">
                     {r.isNew ? (
@@ -484,8 +527,8 @@ export default function BulkResultsTable({ results }) {
                 </td>
 
                 {visibleColumns.criteria && (
-                  <td className="px-5 py-4 align-top border-r border-[#F3F4F6]">
-                    <div className="flex flex-col gap-2 h-full">
+                  <td className="px-5 py-4 align-top border-r border-[#F3F4F6]" style={{position:'relative', overflow:'visible'}}>
+                    <div className="flex flex-col gap-2 h-full" style={{position:'relative'}}>
                       <div className="flex flex-wrap gap-2 items-start content-start transition-colors">
                         {r.matches && r.matches.map((m, mIdx) => (
                           <span
@@ -505,31 +548,66 @@ export default function BulkResultsTable({ results }) {
                             </button>
                           </span>
                         ))}
-                        {addingCriterionId === idx ? (
-                          <div className="flex items-center bg-[#FFFFFF] border-[2px] border-[#FFE600] pl-2 pr-1 py-0.5">
-                            <input
-                              autoFocus
-                              type="text"
-                              value={newCriterionValue}
-                              onChange={(e) => setNewCriterionValue(e.target.value)}
-                              onKeyDown={(e) => e.key === 'Enter' && handleAddCriterionSubmit(idx)}
-                              placeholder="CC1.1"
-                              className="w-[48px] bg-transparent text-[#111827] outline-none text-[12px] font-[700] placeholder-[#D1D5DB] font-mono"
-                            />
-                            <button onClick={() => { setAddingCriterionId(null); setNewCriterionValue(""); }} className="text-[#9CA3AF] hover:text-[#EF4444] p-0.5 transition-colors">
-                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12"></path></svg>
-                            </button>
-                          </div>
-                        ) : (
+                        <div className="relative">
                           <button
+                            id={`addbtn-${idx}`}
                             type="button"
-                            onClick={() => setAddingCriterionId(idx)}
+                            onClick={() => setOpenPickerIdx(openPickerIdx === idx ? null : idx)}
                             className="inline-flex items-center justify-center w-7 h-7 shrink-0 text-[#6B7280] bg-transparent hover:bg-[#FFFBCC] hover:text-[#111827] border border-dashed border-[#D1D5DB] hover:border-[#FFE600] transition-colors"
                             title="Add criterion"
                           >
                             <span className="text-[18px] font-[700] leading-none">+</span>
                           </button>
-                        )}
+                          
+                          {openPickerIdx === idx && (
+                            <div id={`picker-${idx}`} style={{position:'absolute', top:'100%', left:0, width:'200px', maxHeight:'220px', overflowY:'auto', backgroundColor:'#FFFFFF', border:'1px solid #E5E7EB', borderTop:'2px solid #FFE600', boxShadow:'0 8px 16px rgba(0,0,0,0.15)', zIndex:9999}} onMouseDown={(e) => e.stopPropagation()} className="flex flex-col">
+                              <input
+                                type="text"
+                                placeholder="Search criteria..."
+                                value={pickerSearch}
+                                onChange={(e) => setPickerSearch(e.target.value)}
+                                onMouseDown={(e) => e.stopPropagation()}
+                                className="w-full px-3 py-2 text-[12px] font-[500] border-b border-[#FFE600] outline-none focus:bg-[#FFFBCC] transition-colors"
+                                autoFocus
+                                onKeyDown={(e) => e.key === 'Escape' && setOpenPickerIdx(null)}
+                              />
+                              <div className="flex-1 overflow-y-auto">
+                                {ALL_CRITERIA.filter(c => 
+                                  c.toLowerCase().includes(pickerSearch.toLowerCase())
+                                ).map((criterion) => {
+                                  const isAdded = r.matches?.some(m => m.criterion === criterion);
+                                  return (
+                                    <button
+                                      key={criterion}
+                                      type="button"
+                                      onMouseDown={(e) => {
+                                        e.preventDefault()
+                                        e.stopPropagation()
+                                        if (!isAdded) handlePickCriterion(idx, criterion)
+                                      }}
+                                      className={`w-full h-8 px-3 text-[12px] font-[600] font-mono text-left border-b border-[#F3F4F6] last:border-b-0 flex items-center justify-between ${
+                                        isAdded
+                                          ? "bg-[#F3F4F6] text-[#9CA3AF] cursor-not-allowed"
+                                          : "hover:bg-[#FFFBCC] transition-colors cursor-pointer text-[#111827]"
+                                      }`}
+                                      disabled={isAdded}
+                                    >
+                                      <span>{criterion}</span>
+                                      {isAdded && <span className="text-[#9CA3AF] font-bold">✓</span>}
+                                    </button>
+                                  );
+                                })}
+                                {ALL_CRITERIA.filter(c => 
+                                  c.toLowerCase().includes(pickerSearch.toLowerCase())
+                                ).length === 0 && (
+                                  <div className="p-3 text-[11px] text-[#9CA3AF] text-center">
+                                    {pickerSearch ? "No matches" : "All added"}
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          )}
+                        </div>
                       </div>
                     </div>
                   </td>
@@ -595,12 +673,6 @@ export default function BulkResultsTable({ results }) {
                                 )}
                               </div>
                             ))}
-                            <button
-                              onClick={() => handleAddTestingStep(idx)}
-                              className="inline-flex items-center text-[11px] font-[700] uppercase tracking-wider text-[#6B7280] hover:text-[#111827] hover:bg-[#fffdf2] px-2 py-1 border-[2px] border-dashed border-[#E5E7EB] hover:border-[#FFE600] transition-colors self-start mt-1"
-                            >
-                              + STEP
-                            </button>
                           </div>
                         )}
                       </div>

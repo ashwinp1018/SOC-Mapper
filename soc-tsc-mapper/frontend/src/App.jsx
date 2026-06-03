@@ -128,7 +128,7 @@ export default function App() {
       )}
 
       {/* Sidebar */}
-      <aside className={`fixed inset-y-0 left-0 transform ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'} transition-transform duration-300 ease-in-out md:relative md:translate-x-0 w-[220px] bg-[#FFFFFF] border-r-[4px] border-[#FFE600] flex flex-col flex-shrink-0 z-50`}>
+      <aside className={`fixed inset-y-0 left-0 transform ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'} transition-transform duration-300 ease-in-out md:relative md:translate-x-0 w-[200px] bg-[#FFFFFF] border-r-[4px] border-[#FFE600] flex flex-col flex-shrink-0 z-50`}>
         <div className="p-6">
           <div className="flex items-center justify-between">
             <h1 className="text-[28px] font-[900] text-black tracking-tight cursor-default select-none leading-none">EY</h1>
@@ -197,7 +197,7 @@ export default function App() {
       <main className="flex-1 flex flex-col h-screen overflow-hidden">
         
         {/* Top Navbar */}
-        <header className="h-[72px] bg-[#FFFFFF] border-b-[2px] border-[#FFE600] flex items-center justify-between px-4 md:px-8 flex-shrink-0 z-10">
+        <header className="h-[56px] bg-[#FFFFFF] border-b-[2px] border-[#FFE600] flex items-center justify-between px-4 md:px-8 flex-shrink-0 z-10">
           <div className="flex items-center">
             <button 
               className="mr-4 md:hidden text-[#6B7280] hover:text-black focus:outline-none" 
@@ -319,9 +319,9 @@ export default function App() {
                       <ResultsTable results={results} />
                     ) : (
                       <div className="flex flex-col items-center justify-center flex-grow py-16">
-                        <span className="text-[#FFE600] text-[64px] font-[900] leading-none select-none">—</span>
-                        <h3 className="text-black font-[700] text-[16px] mt-6">No results yet</h3>
-                        <p className="text-[#6B7280] text-[13px] font-[500] mt-1">Submit a control description to begin mapping</p>
+                        <span className="text-[#FFE600] text-[48px] font-[900] leading-none select-none animate-soft-bounce">—</span>
+                        <h3 className="text-[#111827] font-[700] text-[15px] mt-6">No results yet</h3>
+                        <p className="text-[#9CA3AF] text-[13px] mt-1">Paste a control description and click Analyze</p>
                       </div>
                     )}
                   </div>

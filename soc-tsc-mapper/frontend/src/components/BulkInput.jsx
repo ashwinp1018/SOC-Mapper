@@ -33,20 +33,26 @@ export default function BulkInput({ onSubmit, isLoading }) {
             </p>
           </div>
           
-          <div className="relative">
+          <div className="relative flex">
+            {/* Line numbers */}
+            <div className="w-[28px] bg-[#F9FAFB] border-r border-[#E5E7EB] flex flex-col pt-[16px] overflow-hidden">
+              <pre className="m-0 p-0 text-[11px] text-[#9CA3AF] text-right pr-2 leading-[1.4] font-[500]">
+                {Array.from({ length: text.split('\n').length }, (_, i) => i + 1).join('\n')}
+              </pre>
+            </div>
             <textarea
               id="bulk-control"
               value={text}
               onChange={(e) => setText(e.target.value)}
               placeholder={"Example:\n\n1. User access is reviewed quarterly...\n2. Backup jobs are executed daily..."}
               rows={14}
-              className="w-full flex-grow bg-[#FAFAFA] text-[#111827] p-[16px] border border-transparent border-b-[2px] border-b-[#FFE600] outline-none text-[14px] focus:border-[2px] focus:border-[#FFE600] focus:bg-[#FFFFFF] transition-all duration-150 resize-y placeholder-[#9CA3AF] leading-relaxed min-h-[140px] appearance-none"
+              className="flex-grow bg-[#FAFAFA] text-[#111827] p-[16px] border border-transparent border-b-[2px] border-b-[#FFE600] outline-none text-[14px] focus:border-[2px] focus:border-[#FFE600] focus:bg-[#FFFFFF] focus:shadow-[inset_0_2px_4px_rgba(0,0,0,0.04)] transition-all duration-150 resize-y placeholder-[#9CA3AF] leading-[1.4] min-h-[140px] appearance-none font-[500]"
             />
             {/* Absolute Badge inside textarea wrapper for top right positioning */}
-            <div className="absolute top-0 right-0">
-               <span className={`inline-block px-3 py-1.5 text-[11px] font-[800] uppercase tracking-[0.15em] border-l-[2px] border-b-[2px] transition-colors ${
+            <div className="absolute top-0 right-0 p-[16px]">
+               <span className={`inline-block px-3 py-1.5 text-[11px] font-[800] uppercase tracking-[0.15em] border-l-[2px] border-b-[2px] transition-all ${
                  controlCount > 0 
-                   ? "bg-[#FFE600] text-black border-l-[#D4A017] border-b-[#D4A017]" 
+                   ? "bg-[#FFE600] text-black border-l-[#D4A017] border-b-[#D4A017] animate-pulse-badge" 
                    : "bg-[#F3F4F6] text-[#9CA3AF] border-l-[#E5E7EB] border-b-[#E5E7EB]"
                }`}>
                  {controlCount} CONTROLS

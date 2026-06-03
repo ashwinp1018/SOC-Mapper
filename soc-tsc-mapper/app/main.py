@@ -209,6 +209,19 @@ STRICT RULES:
 - Use REPERFORMANCE when testing a calculation or access control sample
 - Use RECALCULATION when testing a metric or computed value
 
+ORDER RULES:
+- Read the control description carefully from top to bottom
+- Identify every distinct procedure or activity mentioned in the control
+  in the exact order they appear
+- Write the testing paragraphs in the SAME ORDER as the procedures 
+  appear in the control description
+- The first thing mentioned in the control = first testing paragraph
+- The second thing mentioned in the control = second testing paragraph
+- The third thing mentioned in the control = third testing paragraph
+- Never reorder, group, or reorganize the testing procedures
+- Never test something in paragraph 2 that was mentioned first 
+  in the control description
+
 STRUCTURE:
 - Write exactly 2 to 3 paragraphs
 - Each paragraph = exactly 1 to 2 sentences
@@ -223,18 +236,30 @@ OUTPUT:
 - No labels, no preamble, no bullet points, no headers
 - No explanation of what you are doing"""
 
-        user_prompt = f"""Write a SOC 2 audit testing narrative for the following control:
+        user_prompt = f"""Write a SOC 2 audit testing narrative for the 
+following control:
 
 Control Description:
 {control_text}
 
-Requirements:
-- Write 2 to 3 paragraphs, each testing a different aspect of the control
-- Every sentence must end with "to determine whether" followed by the control activity in past tense
+CRITICAL REQUIREMENT — ORDER:
+Read the control description from start to finish.
+Write your testing paragraphs in the EXACT SAME ORDER as the 
+activities appear in the control.
+If the control mentions (1) policy documentation, then (2) quarterly 
+reviews, then (3) deprovisioning — your paragraphs must test them 
+in that exact sequence: policy first, quarterly reviews second, 
+deprovisioning third.
+Do not reorder. Do not group. Follow the control sequence exactly.
+
+Other requirements:
+- Every sentence must end with "to determine whether" followed 
+  by the control activity in past tense
 - Default to Inspected for most paragraphs
 - Use "For a sample of..." when testing operating effectiveness
 - Do not mention any criteria codes
 - Do not use "Obtained and reviewed"
+- Write 2 to 3 paragraphs only
 - Output only the paragraphs, nothing else"""
 
         response = openai_client.chat.completions.create(

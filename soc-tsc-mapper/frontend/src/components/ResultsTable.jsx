@@ -37,10 +37,10 @@ export default function ResultsTable({ results }) {
     return "bg-[#F3F4F6] text-[#6B7280]";
   };
 
-  const getRowStyle = (rank) => {
-    if (rank === 1) return "border-l-[4px] border-l-[#FFE600] bg-[#FFFBCC] hover:bg-[#F9FAFB] hover:border-l-black";
-    if (rank <= 3) return "border-l-[2px] border-l-[#D1D5DB] hover:bg-[#F9FAFB] hover:border-l-black";
-    return "border-l-[2px] border-l-transparent hover:bg-[#F9FAFB] hover:border-l-black";
+  const getRowLeftBarColor = (score) => {
+    if (score > 0.02) return "border-l-[3px] border-l-[#10B981]";
+    if (score >= 0.015) return "border-l-[3px] border-l-[#F59E0B]";
+    return "border-l-[3px] border-l-[#9CA3AF]";
   };
 
   if (!results || results.length === 0) return null;
@@ -61,8 +61,8 @@ export default function ResultsTable({ results }) {
             {results.map((result, idx) => (
               <tr
                 key={idx}
-                className={`cursor-pointer transition-all duration-150 group animate-slide-in border-b border-[#F3F4F6] ${getRowStyle(result.rank)}`}
-                style={{ animationDelay: `${idx * 50}ms` }}
+                className={`cursor-pointer transition-all duration-150 group border-b border-[#F3F4F6] ${getRowLeftBarColor(result.score)} hover:bg-[#F9FAFB]`}
+                style={{ animation: `scoreEntrance 0.4s ease-out ${idx * 50}ms both` }}
                 onMouseEnter={(e) => handleMouseEnter(e, result)}
                 onMouseLeave={handleMouseLeave}
               >
@@ -80,7 +80,10 @@ export default function ResultsTable({ results }) {
                   </div>
                 </td>
                 <td className="px-4 py-4 text-right align-middle">
-                  <span className={`inline-block px-3 py-1 text-[12px] font-[600] tracking-wide ${getScoreStyle(result.score)}`}>
+                  <span 
+                    className={`inline-block px-3 py-1 text-[12px] font-[600] tracking-wide ${getScoreStyle(result.score)}`}
+                    style={{ animation: `scoreEntranceFade 0.5s ease-out ${idx * 50}ms both` }}
+                  >
                     {result.score.toFixed(4)}
                   </span>
                 </td>
