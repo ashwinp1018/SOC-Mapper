@@ -3,6 +3,7 @@ import ControlInput from "./components/ControlInput";
 import ResultsTable from "./components/ResultsTable";
 import BulkInput from "./components/BulkInput";
 import BulkResultsTable from "./components/BulkResultsTable";
+import Section3Upload from "./components/Section3Upload";
 import { callMatch, callMatchBulk } from "./api/match";
 
 function parseControls(text) {
@@ -35,6 +36,9 @@ const TargetIcon = () => (
 const TagIcon = () => (
   <svg className="absolute -bottom-4 -right-4 w-32 h-32 text-[#FFE600] opacity-5 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"></path></svg>
 );
+const UploadIcon = () => (
+  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10"></path></svg>
+);
 
 export default function App() {
   const [mode, setMode] = useState("single");
@@ -46,6 +50,7 @@ export default function App() {
   const [isBulkLoading, setIsBulkLoading] = useState(false);
   const [bulkError, setBulkError] = useState(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [preloadedControls, setPreloadedControls] = useState(null);
 
   // Stats State
   const [sessionControlsAnalyzed, setSessionControlsAnalyzed] = useState(0);
@@ -99,6 +104,16 @@ export default function App() {
     } finally {
       setIsBulkLoading(false);
     }
+  };
+
+  const handleSection3Ready = (controls) => {
+    console.log("[APP] Section 3 controls ready:", controls.length);
+    const text = controls.map(c => c.control_description).join("\n\n");
+    setPreloadedControls(text);
+    setMode("bulk");
+    setTimeout(() => {
+      handleBulkSubmit(text, 0.6);
+    }, 100);
   };
 
   // Compute Stats
@@ -168,6 +183,18 @@ export default function App() {
             Bulk Analysis
           </button>
 
+          <button
+            onClick={() => { setMode('section3'); setIsSidebarOpen(false); }}
+            className={`w-full flex items-center px-4 py-[10px] text-[14px] transition-colors duration-150 ${
+              mode === 'section3' 
+                ? 'bg-[#FFE600] text-black font-[700]' 
+                : 'text-[#6B7280] font-[500] hover:bg-[#F9F9F9] hover:text-black border-l-[3px] border-transparent hover:border-black'
+            }`}
+          >
+            <span className={`mr-3 ${mode === 'section3' ? 'text-black' : 'text-[#9CA3AF]'}`}><UploadIcon /></span>
+            Section 3 Import
+          </button>
+
           <div className="my-6 pt-5">
             <span className="px-4 text-[10px] uppercase text-[#9CA3AF] tracking-[0.12em] font-[700] mb-2 block">TOOLS</span>
             <button disabled className="w-full flex items-center px-4 py-[10px] text-[14px] text-[#9CA3AF] font-[500] cursor-not-allowed group border-l-[3px] border-transparent">
@@ -207,10 +234,10 @@ export default function App() {
             </button>
             <div className="flex flex-col justify-center">
               <h2 className="text-[16px] md:text-[20px] font-[700] text-black truncate max-w-[150px] sm:max-w-none">
-                {mode === 'single' ? 'Single Analysis' : 'Bulk Control Analysis'}
+                {mode === 'single' ? 'Single Analysis' : mode === 'bulk' ? 'Bulk Control Analysis' : 'Section 3 Import'}
               </h2>
               <p className="hidden sm:block text-[12px] text-[#9CA3AF] font-[500] mt-0.5 tracking-wide">
-                EY / SOC TSC Mapper / {mode === 'single' ? 'Single Analysis' : 'Bulk Control Analysis'}
+                EY / SOC TSC Mapper / {mode === 'single' ? 'Single Analysis' : mode === 'bulk' ? 'Bulk Control Analysis' : 'Section 3 Import'}
               </p>
             </div>
           </div>
@@ -340,7 +367,7 @@ export default function App() {
                      </div>
                      <span className="text-[10px] font-[800] text-[#9CA3AF] uppercase tracking-[0.1em] bg-[#F4F5F7] px-3 py-1.5 border border-[#E5E7EB]">Max 20</span>
                   </div>
-                  <BulkInput onSubmit={handleBulkSubmit} isLoading={isBulkLoading} />
+                  <BulkInput onSubmit={handleBulkSubmit} isLoading={isBulkLoading} preloadedControls={preloadedControls} />
                 </div>
                 
                 {isBulkLoading ? (
@@ -371,6 +398,12 @@ export default function App() {
                      <BulkResultsTable results={bulkResults} />
                   </div>
                 ) : null}
+              </div>
+            )}
+
+            {mode === 'section3' && (
+              <div className="pb-20">
+                <Section3Upload onControlsReady={handleSection3Ready} />
               </div>
             )}
 

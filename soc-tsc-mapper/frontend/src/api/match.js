@@ -80,3 +80,38 @@ export async function generateNarrative(controlText, criteria) {
   console.log("[API] Narrative received:", data.narrative?.substring(0, 80));
   return data;
 }
+
+export async function uploadSection3(file) {
+  console.log("[API] Uploading Section 3:", file.name)
+  const formData = new FormData()
+  formData.append("file", file)
+  
+  const response = await fetch("http://localhost:8000/upload-section3", {
+    method: "POST",
+    body: formData
+  })
+  
+  console.log("[API] Upload response status:", response.status)
+  if (!response.ok) {
+    const error = await response.json()
+    throw new Error(error.detail || "Upload failed")
+  }
+  return await response.json()
+}
+
+export async function extractControls(text) {
+  console.log("[API] Extracting controls from", text.length, "chars")
+  
+  const response = await fetch("http://localhost:8000/extract-controls", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ text })
+  })
+  
+  console.log("[API] Extract response status:", response.status)
+  if (!response.ok) {
+    const error = await response.json()
+    throw new Error(error.detail || "Extraction failed")
+  }
+  return await response.json()
+}

@@ -1,8 +1,14 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 
-export default function BulkInput({ onSubmit, isLoading }) {
+export default function BulkInput({ onSubmit, isLoading, preloadedControls }) {
   const [text, setText] = useState("");
   const [alpha, setAlpha] = useState(0.6);
+
+  useEffect(() => {
+    if (preloadedControls) {
+      setText(preloadedControls);
+    }
+  }, [preloadedControls]);
 
   const controlCount = useMemo(() => {
     if (!text.trim()) return 0;

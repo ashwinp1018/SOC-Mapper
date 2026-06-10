@@ -8,4 +8,6 @@ python-dotenv
 anthropic
 rank-bm25
 jsPDF
+pdfplumber
+python-docx
 
