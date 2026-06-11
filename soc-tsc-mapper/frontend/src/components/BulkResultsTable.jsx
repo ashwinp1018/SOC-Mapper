@@ -32,6 +32,7 @@ const TESTING_RESULTS_OPTIONS = [
 
 export default function BulkResultsTable({ results }) {
   const [editableResults, setEditableResults] = useState([]);
+  const [clientName, setClientName] = useState("");
 
   const [hoveredResult, setHoveredResult] = useState(null);
   const [tooltipPos, setTooltipPos] = useState({ x: 0, y: 0 });
@@ -285,9 +286,11 @@ export default function BulkResultsTable({ results }) {
     const prefixCounters = {};
     const body = [];
 
+    const clientLabel = clientName.trim() || "[CLIENT]";
+
     // Title row — inside the table, spans all 5 columns
     body.push([{
-      content: "Security, Availability, and Confidentiality Criteria Mapped to [CLIENT] Controls & Independent Auditor's Tests, and Results of Tests",
+      content: `Security, Availability, and Confidentiality Criteria Mapped to ${clientLabel} Controls & Independent Auditor's Tests, and Results of Tests`,
       colSpan: 5,
       styles: {
         fillColor: [240, 240, 240],
@@ -303,7 +306,7 @@ export default function BulkResultsTable({ results }) {
     // Column header row — inside body, not in head
     body.push([
       { content: "Control #", styles: { fontStyle: "bold", fillColor: [220, 220, 220], textColor: [0, 0, 0], fontSize: 9, lineColor: [0, 0, 0], lineWidth: 0.3 } },
-      { content: "Control specified by CLIENT", styles: { fontStyle: "bold", fillColor: [220, 220, 220], textColor: [0, 0, 0], fontSize: 9, lineColor: [0, 0, 0], lineWidth: 0.3 } },
+      { content: `Control specified by ${clientLabel}`, styles: { fontStyle: "bold", fillColor: [220, 220, 220], textColor: [0, 0, 0], fontSize: 9, lineColor: [0, 0, 0], lineWidth: 0.3 } },
       { content: "Criteria", styles: { fontStyle: "bold", fillColor: [220, 220, 220], textColor: [0, 0, 0], fontSize: 9, lineColor: [0, 0, 0], lineWidth: 0.3 } },
       { content: "Testing performed by EY", styles: { fontStyle: "bold", fillColor: [220, 220, 220], textColor: [0, 0, 0], fontSize: 9, lineColor: [0, 0, 0], lineWidth: 0.3 } },
       { content: "Results of tests", styles: { fontStyle: "bold", fillColor: [220, 220, 220], textColor: [0, 0, 0], fontSize: 9, lineColor: [0, 0, 0], lineWidth: 0.3 } },
@@ -393,6 +396,15 @@ export default function BulkResultsTable({ results }) {
           data.settings.margin.left,
           doc.internal.pageSize.height - 8
         );
+        const generatedAt = new Date().toLocaleString('en-GB', {
+          day: '2-digit', month: 'short', year: 'numeric',
+          hour: '2-digit', minute: '2-digit'
+        });
+        doc.text(
+          `Generated: ${generatedAt}`,
+          data.settings.margin.left,
+          doc.internal.pageSize.height - 4
+        );
         doc.text(
           `Page ${currentPage} of ${totalPages}`,
           doc.internal.pageSize.width - data.settings.margin.right,
@@ -403,13 +415,39 @@ export default function BulkResultsTable({ results }) {
     });
 
     const today = new Date().toISOString().split("T")[0];
-    doc.save(`EY_SOC_TSC_Mapping_${today}.pdf`);
+    const safeName = clientName.trim().replace(/\s+/g, '_') || 'CLIENT';
+    doc.save(`EY_SOC_${safeName}_${today}.pdf`);
   };
 
   if (!editableResults || editableResults.length === 0) return null;
 
   return (
     <div className="space-y-[24px] border-t-[4px] border-t-[#FFE600]">
+      <div style={{marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '12px'}}>
+        <label style={{fontSize: '12px', fontWeight: 700, color: '#6B7280', 
+          textTransform: 'uppercase', letterSpacing: '0.08em', whiteSpace: 'nowrap'}}>
+          CLIENT NAME
+        </label>
+        <input
+          type="text"
+          value={clientName}
+          onChange={(e) => setClientName(e.target.value)}
+          placeholder="Enter client name..."
+          style={{
+            flex: 1,
+            maxWidth: '300px',
+            height: '36px',
+            border: 'none',
+            borderBottom: '2px solid #FFE600',
+            background: 'transparent',
+            fontSize: '14px',
+            fontWeight: 600,
+            color: '#111827',
+            outline: 'none',
+            padding: '0 8px'
+          }}
+        />
+      </div>
       <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-4">
         <div>
           <h2 className="text-[16px] font-[700] text-[#111827] mb-1 pl-3 border-l-[4px] border-l-[#FFE600]">

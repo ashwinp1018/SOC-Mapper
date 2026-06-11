@@ -99,14 +99,27 @@ export async function uploadSection3(file) {
   return await response.json()
 }
 
-export async function extractControls(text) {
-  console.log("[API] Extracting controls from", text.length, "chars")
+export async function extractControls(text, onProgress) {
+  const job_id = `job_${Date.now()}`
+  console.log("[API] Extracting controls, job:", job_id)
+  
+  // Start polling progress
+  const pollInterval = setInterval(async () => {
+    try {
+      const res = await fetch(`http://localhost:8000/extraction-progress/${job_id}`)
+      const progress = await res.json()
+      if (onProgress) onProgress(progress)
+      if (progress.status === "complete") clearInterval(pollInterval)
+    } catch (e) {}
+  }, 1000)
   
   const response = await fetch("http://localhost:8000/extract-controls", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ text })
+    body: JSON.stringify({ text, job_id })
   })
+  
+  clearInterval(pollInterval)
   
   console.log("[API] Extract response status:", response.status)
   if (!response.ok) {
@@ -115,3 +128,4 @@ export async function extractControls(text) {
   }
   return await response.json()
 }
+

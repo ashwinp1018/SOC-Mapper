@@ -16,14 +16,29 @@ const DOMAIN_OPTIONS = [
   "Other"
 ];
 
+const getFriendlyError = (error) => {
+  const msg = error?.message || error || ""
+  if (msg.includes("Unsupported file")) 
+    return "Please upload a PDF or DOCX file only."
+  if (msg.includes("extract text")) 
+    return "Could not read text from this document. Try a different file."
+  if (msg.includes("parse")) 
+    return "AI could not process this document. Please try again."
+  if (msg.includes("401") || msg.includes("API")) 
+    return "API connection error. Please contact your administrator."
+  return "Something went wrong. Please try uploading the document again."
+}
+
 export default function Section3Upload({ onControlsReady }) {
   const [uploadState, setUploadState] = useState("idle");
-  // idle | uploading | extracting | review | error
+  // idle | uploading | extracting | confirm | review | error
   const [extractedControls, setExtractedControls] = useState([]);
   const [editableControls, setEditableControls] = useState([]);
   const [error, setError] = useState(null);
   const [fileName, setFileName] = useState("");
   const [editingAll, setEditingAll] = useState(false);
+  const [progress, setProgress] = useState({ current: 0, total: 0, controls_found: 0 });
+  const [showConfirm, setShowConfirm] = useState(false);
   const fileInputRef = useRef(null);
 
   const handleFileSelect = async (file) => {
@@ -32,6 +47,7 @@ export default function Section3Upload({ onControlsReady }) {
     setFileName(file.name);
     setUploadState("uploading");
     setError(null);
+    setProgress({ current: 0, total: 0, controls_found: 0 });
     
     try {
       console.log("[SECTION3] Starting upload...");
@@ -40,7 +56,9 @@ export default function Section3Upload({ onControlsReady }) {
       
       setUploadState("extracting");
       
-      const extractResult = await extractControls(uploadResult.text);
+      const extractResult = await extractControls(uploadResult.text, (p) => {
+        setProgress(p);
+      });
       console.log("[SECTION3] Extraction complete:", extractResult.count, "controls");
       
       setExtractedControls(extractResult.controls);
@@ -49,10 +67,11 @@ export default function Section3Upload({ onControlsReady }) {
         include: true
       })));
       
-      setUploadState("review");
+      setShowConfirm(true);
+      setUploadState("confirm");
     } catch (err) {
       console.error("[SECTION3] Error:", err);
-      setError(err.message || "Failed to process document");
+      setError(err);
       setUploadState("error");
     }
   };
@@ -102,6 +121,8 @@ export default function Section3Upload({ onControlsReady }) {
     setEditableControls([]);
     setError(null);
     setFileName("");
+    setProgress({ current: 0, total: 0, controls_found: 0 });
+    setShowConfirm(false);
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
     }
@@ -156,25 +177,108 @@ export default function Section3Upload({ onControlsReady }) {
 
       {uploadState === "extracting" && (
         <div className="space-y-4">
-          <div className="p-6 bg-[#F9FAFB] border border-[#E5E7EB] text-center">
-            <div className="flex justify-center mb-4">
-              <span className="inline-flex gap-1">
-                <span className="inline-block w-2 h-2 bg-[#FFE600] rounded-full animate-bounce" style={{animationDelay: '0ms'}}></span>
-                <span className="inline-block w-2 h-2 bg-[#FFE600] rounded-full animate-bounce" style={{animationDelay: '150ms'}}></span>
-                <span className="inline-block w-2 h-2 bg-[#FFE600] rounded-full animate-bounce" style={{animationDelay: '300ms'}}></span>
-              </span>
+          <div className="p-6 bg-[#F9FAFB] border border-[#E5E7EB]">
+            <div style={{textAlign: 'center', padding: '32px'}}>
+              <p style={{fontSize: '14px', fontWeight: 600, color: '#111827', marginBottom: '8px'}}>
+                AI is reading Section 3 and identifying controls...
+              </p>
+              {progress.total > 0 && (
+                <>
+                  <p style={{fontSize: '13px', color: '#6B7280', marginBottom: '16px'}}>
+                    Processing chunk {progress.current} of {progress.total} 
+                    — {progress.controls_found} controls found so far
+                  </p>
+                  <div style={{width: '100%', height: '4px', background: '#F3F4F6', borderRadius: 0}}>
+                    <div style={{
+                      height: '4px',
+                      background: '#FFE600',
+                      width: `${progress.total > 0 ? (progress.current / progress.total) * 100 : 0}%`,
+                      transition: 'width 0.5s ease'
+                    }}/>
+                  </div>
+                </>
+              )}
+              <p style={{fontSize: '12px', color: '#9CA3AF', marginTop: '12px'}}>
+                This may take 15-30 seconds depending on document size
+              </p>
             </div>
-            <p className="font-[600] text-[#111827] text-[14px]">AI is reading Section 3 and identifying controls...</p>
-            <p className="text-[#9CA3AF] text-[12px] mt-2">This may take 15-20 seconds</p>
+          </div>
+        </div>
+      )}
+
+      {uploadState === "confirm" && showConfirm && (
+        <div style={{
+          border: '2px solid #FFE600',
+          padding: '24px',
+          background: '#FFFBCC',
+          marginBottom: '24px'
+        }}>
+          <p style={{fontSize: '16px', fontWeight: 800, color: '#111827', marginBottom: '4px'}}>
+            ✓ {extractedControls.length} controls extracted from {fileName}
+          </p>
+          <p style={{fontSize: '13px', color: '#6B7280', marginBottom: '16px'}}>
+            Does this look correct? Review and confirm before proceeding.
+          </p>
+          <div style={{display: 'flex', gap: '12px'}}>
+            <button
+              onClick={() => { handleReset() }}
+              style={{
+                padding: '8px 20px',
+                border: '2px solid #E5E7EB',
+                background: 'white',
+                fontSize: '13px',
+                fontWeight: 700,
+                cursor: 'pointer'
+              }}
+            >
+              Re-upload Document
+            </button>
+            <button
+              onClick={() => { setShowConfirm(false); setUploadState("review") }}
+              style={{
+                padding: '8px 20px',
+                border: '2px solid #FFE600',
+                background: '#FFE600',
+                fontSize: '13px',
+                fontWeight: 700,
+                cursor: 'pointer'
+              }}
+            >
+              Review {extractedControls.length} Controls →
+            </button>
           </div>
         </div>
       )}
 
       {uploadState === "review" && (
         <div className="space-y-6">
-          <div>
-            <h2 className="font-[700] text-[18px] text-[#111827]">{editableControls.length} Controls Extracted from {fileName}</h2>
-            <p className="text-[13px] text-[#6B7280] mt-1">Review and edit before running analysis</p>
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="font-[700] text-[18px] text-[#111827]">{editableControls.length} Controls Extracted from {fileName}</h2>
+              <p className="text-[13px] text-[#6B7280] mt-1">Review and edit before running analysis</p>
+            </div>
+            <button
+              onClick={() => {
+                setUploadState("idle")
+                setExtractedControls([])
+                setEditableControls([])
+                setFileName("")
+                setProgress({ current: 0, total: 0, controls_found: 0 })
+              }}
+              style={{
+                fontSize: '12px',
+                fontWeight: 700,
+                color: '#6B7280',
+                background: 'transparent',
+                border: '1px solid #E5E7EB',
+                padding: '6px 14px',
+                cursor: 'pointer',
+                textTransform: 'uppercase',
+                letterSpacing: '0.05em'
+              }}
+            >
+              ↩ Start Over
+            </button>
           </div>
 
           <div className="border border-[#E5E7EB]">
@@ -265,7 +369,7 @@ export default function Section3Upload({ onControlsReady }) {
         <div className="space-y-4">
           <div className="p-4 bg-[#FEE2E2] border-2 border-[#EF4444]">
             <p className="font-[600] text-[#991B1B] text-[14px]">Error</p>
-            <p className="text-[#7F1D1D] text-[13px] mt-2">{error}</p>
+            <p className="text-[#7F1D1D] text-[13px] mt-2">{getFriendlyError(error)}</p>
           </div>
           <button
             onClick={handleReset}

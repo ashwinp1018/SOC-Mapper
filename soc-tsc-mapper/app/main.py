@@ -15,6 +15,9 @@ import json
 # Load environment variables from .env file
 load_dotenv(override=True)
 
+# In-memory extraction progress tracking
+extraction_progress = {}
+
 app = FastAPI(title="SOC TSC Matcher")
 
 # Add CORS middleware
@@ -337,9 +340,17 @@ async def upload_section3(file: UploadFile = File(...)):
         print(f"[UPLOAD ERROR] {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
+@app.get("/extraction-progress/{job_id}")
+async def get_extraction_progress(job_id: str):
+    progress = extraction_progress.get(job_id, {
+        "current": 0, "total": 0, "status": "idle", "controls_found": 0
+    })
+    return progress
+
 @app.post("/extract-controls")
 async def extract_controls(request: dict):
     text = request.get("text", "").strip()
+    job_id = request.get("job_id", "default")
     
     if not text:
         raise HTTPException(status_code=400, detail="No text provided")
@@ -399,6 +410,11 @@ If no numbered controls found return empty array: []"""
     seen_descriptions = set()
     counter = 1
     
+    extraction_progress[job_id] = {
+        "current": 0, "total": len(chunks),
+        "status": "processing", "controls_found": 0
+    }
+
     for i, chunk in enumerate(chunks):
         print(f"[EXTRACT] Processing chunk {i+1}/{len(chunks)}")
         
@@ -443,10 +459,22 @@ the control description. Return only the JSON array."""
                     all_controls.append(control)
                     counter += 1
         
+            extraction_progress[job_id] = {
+                "current": i + 1, "total": len(chunks),
+                "status": "processing",
+                "controls_found": len(all_controls)
+            }
+
         except Exception as e:
             print(f"[EXTRACT] Chunk {i+1} failed: {str(e)}")
+            extraction_progress[job_id] = {
+                "current": i + 1, "total": len(chunks),
+                "status": "processing",
+                "controls_found": len(all_controls)
+            }
             continue
     
+    extraction_progress[job_id]["status"] = "complete"
     print(f"[EXTRACT] Total unique controls extracted: {len(all_controls)}")
     
     return {
