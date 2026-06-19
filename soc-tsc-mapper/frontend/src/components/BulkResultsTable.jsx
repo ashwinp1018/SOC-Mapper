@@ -296,8 +296,8 @@ export default function BulkResultsTable({ results }) {
         fillColor: [240, 240, 240],
         textColor: [0, 0, 0],
         fontStyle: "bold",
-        fontSize: 9,
-        cellPadding: { top: 6, bottom: 6, left: 4, right: 4 },
+        fontSize: 10,
+        cellPadding: { top: 8, bottom: 8, left: 4, right: 4 },
         lineColor: [0, 0, 0],
         lineWidth: 0.3,
       },
@@ -305,11 +305,11 @@ export default function BulkResultsTable({ results }) {
 
     // Column header row — inside body, not in head
     body.push([
-      { content: "Control #", styles: { fontStyle: "bold", fillColor: [220, 220, 220], textColor: [0, 0, 0], fontSize: 9, lineColor: [0, 0, 0], lineWidth: 0.3 } },
-      { content: `Control specified by ${clientLabel}`, styles: { fontStyle: "bold", fillColor: [220, 220, 220], textColor: [0, 0, 0], fontSize: 9, lineColor: [0, 0, 0], lineWidth: 0.3 } },
-      { content: "Criteria", styles: { fontStyle: "bold", fillColor: [220, 220, 220], textColor: [0, 0, 0], fontSize: 9, lineColor: [0, 0, 0], lineWidth: 0.3 } },
-      { content: "Testing performed by EY", styles: { fontStyle: "bold", fillColor: [220, 220, 220], textColor: [0, 0, 0], fontSize: 9, lineColor: [0, 0, 0], lineWidth: 0.3 } },
-      { content: "Results of tests", styles: { fontStyle: "bold", fillColor: [220, 220, 220], textColor: [0, 0, 0], fontSize: 9, lineColor: [0, 0, 0], lineWidth: 0.3 } },
+      { content: "Control #", styles: { fillColor: [211, 211, 211], textColor: [0, 0, 0], fontStyle: "bold", fontSize: 9, lineColor: [0, 0, 0], lineWidth: 0.3 } },
+      { content: `Control specified by ${clientLabel}`, styles: { fillColor: [211, 211, 211], textColor: [0, 0, 0], fontStyle: "bold", fontSize: 9, lineColor: [0, 0, 0], lineWidth: 0.3 } },
+      { content: "Criteria", styles: { fillColor: [211, 211, 211], textColor: [0, 0, 0], fontStyle: "bold", fontSize: 9, lineColor: [0, 0, 0], lineWidth: 0.3 } },
+      { content: "Testing performed by EY", styles: { fillColor: [211, 211, 211], textColor: [0, 0, 0], fontStyle: "bold", fontSize: 9, lineColor: [0, 0, 0], lineWidth: 0.3 } },
+      { content: "Results of tests", styles: { fillColor: [211, 211, 211], textColor: [0, 0, 0], fontStyle: "bold", fontSize: 9, lineColor: [0, 0, 0], lineWidth: 0.3 } },
     ]);
 
     // Section headers and data rows
@@ -319,11 +319,11 @@ export default function BulkResultsTable({ results }) {
         content: section,
         colSpan: 5,
         styles: {
-          fillColor: [255, 255, 255],
-          textColor: [0, 0, 0],
-          fontStyle: "normal",
-          fontSize: 9,
-          cellPadding: { top: 5, bottom: 5, left: 3, right: 3 },
+          fillColor: [128, 128, 128],   // medium grey, matches "2.0 - Management and Oversight" banner
+          textColor: [255, 255, 255],
+          fontStyle: "bold",
+          fontSize: 10,
+          cellPadding: { top: 6, bottom: 6, left: 4, right: 4 },
           lineColor: [0, 0, 0],
           lineWidth: 0.3,
         },
@@ -339,21 +339,74 @@ export default function BulkResultsTable({ results }) {
 
         const criteriaList = (row.matches?.map((m) => m.criterion) || []).join("\n");
 
-        const testing = Array.isArray(row.testing_performed)
-          ? row.testing_performed.filter(s => s && s.trim()).map(s => `\u2022 ${s.trim()}`).join("\n")
-          : (row.testing_performed && row.testing_performed.trim() !== "" ? row.testing_performed : "");
+        let testingStr = "";
+        if (Array.isArray(row.testing_performed)) {
+          testingStr = row.testing_performed.filter(s => s && s.trim()).join("\n\n");
+        } else if (typeof row.testing_performed === "string") {
+          testingStr = row.testing_performed;
+        }
+
+        const testing = testingStr && testingStr.trim() !== ""
+          ? testingStr
+          : "";
 
         const results = row.testing_results && row.testing_results !== "-- Select --"
           ? row.testing_results
           : "";
 
-        body.push([
-          { content: controlNum, styles: { fontStyle: "bold", valign: "top", lineColor: [0, 0, 0], lineWidth: 0.3 } },
-          { content: cleanText(row.control_text || ""), styles: { valign: "top", lineColor: [0, 0, 0], lineWidth: 0.3 } },
-          { content: criteriaList, styles: { valign: "top", lineColor: [0, 0, 0], lineWidth: 0.3 } },
-          { content: testing, styles: { valign: "top", lineColor: [0, 0, 0], lineWidth: 0.3 } },
-          { content: results, styles: { valign: "top", lineColor: [0, 0, 0], lineWidth: 0.3 } },
-        ]);
+        // Split testing narrative into separate paragraphs by blank line
+        const testParagraphs = testing
+          .split(/\n\s*\n/)
+          .map(p => p.trim())
+          .filter(p => p.length > 0);
+
+        // If no paragraphs (empty testing field), still create one row
+        const paragraphsToRender = testParagraphs.length > 0 ? testParagraphs : [""];
+        const rowSpanCount = paragraphsToRender.length;
+
+        paragraphsToRender.forEach((paragraph, pIdx) => {
+          if (pIdx === 0) {
+            // First sub-row: include merged cells for Control #, Description, Criteria
+            body.push([
+              {
+                content: controlNum,
+                rowSpan: rowSpanCount,
+                styles: { fontStyle: "bold", valign: "top", lineColor: [0, 0, 0], lineWidth: 0.3 }
+              },
+              {
+                content: cleanText(row.control_text || ""),
+                rowSpan: rowSpanCount,
+                styles: { valign: "top", lineColor: [0, 0, 0], lineWidth: 0.3 }
+              },
+              {
+                content: criteriaList,
+                rowSpan: rowSpanCount,
+                styles: { valign: "top", lineColor: [0, 0, 0], lineWidth: 0.3 }
+              },
+              {
+                content: paragraph,
+                styles: { valign: "top", lineColor: [0, 0, 0], lineWidth: 0.3 }
+              },
+              {
+                content: results,
+                styles: { valign: "top", lineColor: [0, 0, 0], lineWidth: 0.3 }
+              },
+            ]);
+          } else {
+            // Subsequent sub-rows: ONLY the testing paragraph cell and repeated results cell
+            // (merged cells from row above cover the other columns)
+            body.push([
+              {
+                content: paragraph,
+                styles: { valign: "top", lineColor: [0, 0, 0], lineWidth: 0.3 }
+              },
+              {
+                content: results,
+                styles: { valign: "top", lineColor: [0, 0, 0], lineWidth: 0.3 }
+              },
+            ]);
+          }
+        });
       });
     });
 
@@ -367,22 +420,21 @@ export default function BulkResultsTable({ results }) {
       pageBreak: "auto",
       rowPageBreak: "avoid",
       styles: {
-        fontSize: 8,
-        cellPadding: 4,
+        fontSize: 9,
+        cellPadding: 5,
         lineColor: [0, 0, 0],
         lineWidth: 0.3,
         valign: "top",
         textColor: [0, 0, 0],
         overflow: "linebreak",
-        cellWidth: "wrap",
-        font: "helvetica",
+        font: "times",        // reference uses a serif font, not helvetica
       },
       columnStyles: {
-        0: { cellWidth: 18 },
-        1: { cellWidth: 52 },
-        2: { cellWidth: 28 },
-        3: { cellWidth: 60 },
-        4: { cellWidth: 25 },
+        0: { cellWidth: 18 },   // Control #
+        1: { cellWidth: 70 },   // Control Description
+        2: { cellWidth: 20 },   // Criteria
+        3: { cellWidth: 95 },   // Testing Performed (wider, matches reference)
+        4: { cellWidth: 30 },   // Results of Test
       },
       margin: { top: 20, right: 10, bottom: 20, left: 10 },
       didDrawPage: (data) => {
