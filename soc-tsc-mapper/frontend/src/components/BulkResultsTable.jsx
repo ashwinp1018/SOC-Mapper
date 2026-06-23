@@ -410,7 +410,7 @@ export default function BulkResultsTable({ results }) {
       });
     });
 
-    const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
+    const doc = new jsPDF({ orientation: "landscape", format: "a4" });
 
     autoTable(doc, {
       startY: 15,
@@ -419,6 +419,7 @@ export default function BulkResultsTable({ results }) {
       theme: "plain",
       pageBreak: "auto",
       rowPageBreak: "avoid",
+      tableWidth: 197,
       styles: {
         fontSize: 9,
         cellPadding: 5,
@@ -430,13 +431,13 @@ export default function BulkResultsTable({ results }) {
         font: "times",        // reference uses a serif font, not helvetica
       },
       columnStyles: {
-        0: { cellWidth: 18 },   // Control #
-        1: { cellWidth: 70 },   // Control Description
-        2: { cellWidth: 20 },   // Criteria
-        3: { cellWidth: 95 },   // Testing Performed (wider, matches reference)
-        4: { cellWidth: 30 },   // Results of Test
+        0: { cellWidth: 16 },   // Control #
+        1: { cellWidth: 62 },   // Control Description
+        2: { cellWidth: 16 },   // Criteria
+        3: { cellWidth: 80 },   // Testing Performed
+        4: { cellWidth: 23 },   // Results of Test
       },
-      margin: { top: 20, right: 10, bottom: 20, left: 10 },
+      margin: { top: 15, right: 10, bottom: 20, left: 10 },
       didDrawPage: (data) => {
         const totalPages = doc.internal.getNumberOfPages();
         const currentPage = data.pageNumber;
