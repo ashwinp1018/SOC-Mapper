@@ -5,6 +5,7 @@ from fastapi import FastAPI, HTTPException, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
 from app.schemas import MatchRequest, MatchResponse
 from app.matcher import match_control, openai_client
+from app.section12_templates import build_section1, build_section2
 from dotenv import load_dotenv
 import os
 import pdfplumber
@@ -463,5 +464,29 @@ the control description. Return only the JSON array."""
         "count": len(all_controls),
         "status": "success"
     }
+
+
+@app.post("/generate-section12")
+async def generate_section12(req: Section12Request):
+    print(f"[SECTION 12] Generating for client: {req.client_name}")
+    try:
+        data = {
+            "client_name": req.client_name,
+            "system_name": req.system_name,
+            "period_start": req.period_start,
+            "period_end": req.period_end,
+            "criteria_covered": req.criteria_covered,
+            "report_date": req.report_date
+        }
+        sec1 = build_section1(data)
+        sec2 = build_section2(data)
+        return {
+            "section1": sec1,
+            "section2": sec2
+        }
+    except Exception as e:
+        print(f"[SECTION 12 ERROR] {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
 
 # To run: uvicorn app.main:app --reload

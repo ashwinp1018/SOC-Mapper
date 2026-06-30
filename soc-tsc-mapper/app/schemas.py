@@ -17,3 +17,13 @@ class MatchResult(BaseModel):
 class MatchResponse(BaseModel):
     matches: List[MatchResult]
 
+
+class Section12Request(BaseModel):
+    client_name: str
+    system_name: str
+    period_start: str
+    period_end: str
+    criteria_covered: List[str]
+    report_date: str
+
+
